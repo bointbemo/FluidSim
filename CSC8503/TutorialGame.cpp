@@ -14,6 +14,13 @@
 using namespace NCL;
 using namespace CSC8503;
 const int PARTICLE_NUM = 10;
+
+struct ParticleProperties {
+	Vector3 position;
+	float density;
+	float mass;
+	Vector3 dimensions;
+} ParticleProp;
 TutorialGame::TutorialGame()	{
 	world		= new GameWorld();
 #ifdef USEVULKAN
@@ -342,6 +349,9 @@ void TutorialGame::AddFluidToWorld(const Vector3& position, Vector3 dimensions, 
 	
 
 }
+void TutorialGame::AddParticleToBuffer(FluidGameObject particle) {
+	particle.GetPosition()
+};
 FluidGameObject* TutorialGame::AddFluidParticleToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
 	FluidGameObject* fluid = new FluidGameObject();
 
@@ -353,6 +363,7 @@ FluidGameObject* TutorialGame::AddFluidParticleToWorld(const Vector3& position, 
 	fluid->SetRenderObject(new RenderObject(&fluid->GetTransform(), sphereMesh, basicTex, FluidShader));
 	world->AddFluidGameObject(fluid);
 
+	AddParticleToBuffer(*fluid);
 	return fluid;
 }
 GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {

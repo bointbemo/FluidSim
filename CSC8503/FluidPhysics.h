@@ -20,6 +20,10 @@ namespace NCL {
 			~FluidPhysics();
 			void Update(float dt);
 		protected:
+			void NearestNeighbour();
+			void FluidCollision();
+			void UpdateParticlePositions();
+			void ClearFluids();
 			GameWorld& gameWorld;
 			GLuint ssbo = 0;
 			GLvoid* p;
