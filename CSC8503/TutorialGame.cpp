@@ -8,19 +8,14 @@
 #include "OrientationConstraint.h"
 #include "StateGameObject.h"
 #include "FluidPhysics.h "
-
-
+#include "FluidPhysics.h"
+#include "ParticleProperties.h"
 
 using namespace NCL;
 using namespace CSC8503;
 const int PARTICLE_NUM = 10;
 
-struct ParticleProperties {
-	Vector3 position;
-	float density;
-	float mass;
-	Vector3 dimensions;
-} ParticleProp;
+
 TutorialGame::TutorialGame()	{
 	world		= new GameWorld();
 #ifdef USEVULKAN
@@ -30,7 +25,7 @@ TutorialGame::TutorialGame()	{
 #endif
 	fluidphysics = new FluidPhysics(*world);
 	physics		= new PhysicsSystem(*world);
-
+	ParticleProps = new ParticleProperties;
 	forceMagnitude	= 10.0f;
 	useGravity		= false;
 	inSelectionMode = false;
@@ -277,7 +272,7 @@ void TutorialGame::InitWorld() {
 	//BridgeConstraintTest();
 
 	AddFluidToWorld(Vector3(0,0,0),Vector3(0.1,0.1,0.1));
-	AddCubeToWorld(Vector3(1, 1, 1), Vector3(1, 1, 1));
+	//AddCubeToWorld(Vector3(1, 1, 1), Vector3(1, 1, 1));
 }
 
 /*
@@ -342,28 +337,26 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 void TutorialGame::AddFluidToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
 	
 	for (int PARTICLE = 1; PARTICLE < PARTICLE_NUM; PARTICLE++) {
-		Vector3 Position;
-		AddFluidParticleToWorld(position + Position, dimensions, inverseMass);
-
+		Vector3 Position(PARTICLE,PARTICLE,PARTICLE);
+		AddFluidParticleToWorld(position + Position, dimensions, inverseMass, PARTICLE);
+		
 	}
 	
 
 }
-void TutorialGame::AddParticleToBuffer(FluidGameObject particle) {
-	particle.GetPosition()
-};
-FluidGameObject* TutorialGame::AddFluidParticleToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
+
+FluidGameObject* TutorialGame::AddFluidParticleToWorld(const Vector3& position, Vector3 dimensions, float inverseMass,int PARTICLE_INDEX) {
 	FluidGameObject* fluid = new FluidGameObject();
 
 	FluidVolume* volume = new FluidVolume(dimensions.x, dimensions.x);
 	fluid->SetBoundingVolume((CollisionVolume*)volume);
 
-	fluid->GetTransform().SetPosition(position).SetScale(dimensions * 2);
+	fluid->GetTransform().SetPosition(position).SetScale(dimensions * 5);
 
 	fluid->SetRenderObject(new RenderObject(&fluid->GetTransform(), sphereMesh, basicTex, FluidShader));
 	world->AddFluidGameObject(fluid);
 
-	AddParticleToBuffer(*fluid);
+	
 	return fluid;
 }
 GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {

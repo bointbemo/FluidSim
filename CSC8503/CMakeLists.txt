@@ -11,6 +11,7 @@ set(Header_Files
     "TutorialGame.h"
     "FluidPhysics.h"
     "FluidGameObject.h"
+"ParticleProperties.h"
 
 )
 source_group("Header Files" FILES ${Header_Files})
@@ -24,6 +25,7 @@ set(Source_Files
     "TutorialGame.cpp"
     "FluidPhysics.cpp"
     "FluidGameObject.cpp"
+"ParticleProperties.cpp"
 )
 
 if(USE_VULKAN)

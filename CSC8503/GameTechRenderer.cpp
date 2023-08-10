@@ -116,7 +116,7 @@ void GameTechRenderer::RenderFrame  () {
 	SortObjectList();
 	//RenderFluid();
 	//RenderShadowMap();
-	RenderSkybox();
+	//RenderSkybox();
 	RenderCamera();
 	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
 	glDisable(GL_BLEND);

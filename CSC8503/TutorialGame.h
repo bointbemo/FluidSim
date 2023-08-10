@@ -6,6 +6,7 @@
 #include "PhysicsSystem.h"
 
 #include "StateGameObject.h"
+#include "ParticleProperties.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -15,7 +16,7 @@ namespace NCL {
 			~TutorialGame();
 
 			virtual void UpdateGame(float dt);
-
+			ParticleProperties* ParticleProps;
 		protected:
 			void InitialiseAssets();
 
@@ -34,7 +35,7 @@ namespace NCL {
 			void InitSphereGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, float radius);
 			void InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
-			void AddParticleToBuffer(FluidGameObject particle);
+			void AddParticleToBuffer(FluidGameObject particle, int PARTICLENUM);
 			void BridgeConstraintTest();
 
 			void InitDefaultFloor();
@@ -48,7 +49,7 @@ namespace NCL {
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
 			void AddFluidToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
-			FluidGameObject* AddFluidParticleToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
+			FluidGameObject* AddFluidParticleToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, int PARTICLE_INDEX);
 			GameObject* AddPlayerToWorld(const Vector3& position);
 			GameObject* AddEnemyToWorld(const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);

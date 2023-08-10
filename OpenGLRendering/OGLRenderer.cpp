@@ -90,6 +90,7 @@ void OGLRenderer::BindShader(ShaderBase*s) {
 		glUseProgram(0);
 		boundShader = nullptr;
 	}
+	
 	else if (OGLShader* oglShader = dynamic_cast<OGLShader*>(s)) {
 		glUseProgram(oglShader->programID);
 		boundShader = oglShader;

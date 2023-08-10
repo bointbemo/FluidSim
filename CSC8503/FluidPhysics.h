@@ -6,11 +6,14 @@
 #include "OGLComputeShader.h"
 
 #include "GameWorld.h"
+#include "TutorialGame.h"
 using namespace NCL;
 using namespace Rendering;
 namespace NCL {
 	class Maths::Vector3;
 	class Maths::Vector4;
+	extern struct ParticleProperties;
+
 	namespace CSC8503 {
 		class RenderObject;
 
@@ -19,19 +22,30 @@ namespace NCL {
 			FluidPhysics(GameWorld& world);
 			~FluidPhysics();
 			void Update(float dt);
+			
+			struct ParticleProperty {
+				NCL::Maths::Vector3 position;
+				float density;
+				float mass;
+				NCL::Maths::Vector3 dimensions;
+				NCL::Maths::Vector3 volume;
+
+			};
 		protected:
+			/*void AddParticleToStruct(FluidGameObject particle, int PARTICLEINDEX);*/
 			void NearestNeighbour();
 			void FluidCollision();
 			void UpdateParticlePositions();
 			void ClearFluids();
 			GameWorld& gameWorld;
-			GLuint ssbo = 0;
+			GLuint ssbo;
+			GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
 			GLvoid* p;
 			// data input
 			GLuint fluidbuffer;
 			size_t fluidCount;
 			//compute shader
-			OGLComputeShader* computeShader;
+			OGLComputeShader* NNScomputeShader;
 		};
 	}
 }

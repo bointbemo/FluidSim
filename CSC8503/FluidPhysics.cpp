@@ -4,6 +4,7 @@
 #include "RenderObject.h"
 #include "Camera.h"
 #include "TextureLoader.h"
+#include "TutorialGame.h"
 using namespace NCL;
 using namespace Rendering;
 using namespace CSC8503;
@@ -23,7 +24,7 @@ struct SSBO
 
 } ShaderBuff;
 FluidPhysics::FluidPhysics(GameWorld& world) : OGLRenderer(*Window::GetWindow()), gameWorld(world) {
-	computeShader = new OGLComputeShader("computeShader.comp");
+	NNScomputeShader = new OGLComputeShader("computeShader.comp");
 	GLvoid* p;
 	glGenBuffers(1, &ssbo);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
@@ -32,8 +33,9 @@ FluidPhysics::FluidPhysics(GameWorld& world) : OGLRenderer(*Window::GetWindow())
 
 };
 FluidPhysics::~FluidPhysics() {
-	delete computeShader;
+	delete NNScomputeShader;
 	delete p;
+	glDeleteFramebuffers(1, &ssbo);
 };
 void FluidPhysics::Update(float dt) {
 	GameTimer t;
@@ -45,23 +47,43 @@ void FluidPhysics::Update(float dt) {
 	ClearFluids();
 	
 } 
+
 void FluidPhysics::NearestNeighbour() {
-	
+	NNScomputeShader->Bind();
 	p = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
 	memcpy(p, &shader_data, sizeof(shader_data));
-	glGenBuffers(1, &ssbo);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(ssbo), NULL, GL_STATIC_DRAW);
+	
+	
+	std::vector<FluidGameObject*>::const_iterator first;
+	std::vector<FluidGameObject*>::const_iterator last;
+	int* size = new int;
+	
+	gameWorld.GetFluidObjectIterators(first, last, size);
+	
+	ParticleProperties PartyP[9];
+	ParticleProperties* ParticlePropslocal;
+	
+	ParticlePropslocal = (ParticleProperties*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, 3 * sizeof(ParticleProperties), bufMask);
+	
+	int j = 0;
+	
+	for (auto i = first; i != last; ++i) {
+		ParticlePropslocal[j].density = (*i)->AddParticleToStruct(*i, j)->density;
+		ParticlePropslocal[j].position = (*i)->AddParticleToStruct(*i, j)->position;
+		
+		j++;
+	}
+	  //invalidate makes a big difference when re-writting
 
-	GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT; // invalidate makes a ig difference when re-writting
-	SSBO* silly;
-	silly = (SSBO*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0,sizeof(ssbo), bufMask);
-
-	computeShader->Bind();
-	computeShader->Execute(1, 1, 1);
-	computeShader->Unbind();
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, ssbo);
+	NNScomputeShader->Execute(1, 1, 1);
+	NNScomputeShader->Unbind();
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	
+	delete size;
+	
 };
 void FluidPhysics::FluidCollision() {
 

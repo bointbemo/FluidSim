@@ -8,6 +8,7 @@ namespace NCL::CSC8503 {
 	class NetworkObject;
 	class RenderObject;
 	class PhysicsObject;
+	
 
 	class GameObject	{
 	public:
@@ -79,6 +80,7 @@ namespace NCL::CSC8503 {
 
 		CollisionVolume*	boundingVolume;
 		PhysicsObject*		physicsObject;
+		
 		RenderObject*		renderObject;
 		NetworkObject*		networkObject;
 

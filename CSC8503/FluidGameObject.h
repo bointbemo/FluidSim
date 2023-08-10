@@ -1,7 +1,7 @@
 #pragma once
 #include "Transform.h"
 #include "CollisionVolume.h"
-
+#include "ParticleProperties.h"
 
 namespace NCL::CSC8503 {
 	class NetworkObject;
@@ -17,7 +17,7 @@ namespace NCL::CSC8503 {
 		void SetBoundingVolume(CollisionVolume* vol) {
 			boundingVolume = vol;
 		}
-
+	
 		const CollisionVolume* GetBoundingVolume() const {
 			return boundingVolume;
 		}
@@ -42,12 +42,11 @@ namespace NCL::CSC8503 {
 			renderObject = newObject;
 		}
 
-
-	
-
+		ParticleProperties* AddParticleToStruct(FluidGameObject* ParticleProps, int PARTICLEINDEX);
+		
 	protected:
 		Transform			transform;
-
+		ParticleProperties particleProperties;
 		CollisionVolume* boundingVolume;
 		
 		RenderObject* renderObject;
