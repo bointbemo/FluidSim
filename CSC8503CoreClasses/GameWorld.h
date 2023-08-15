@@ -18,6 +18,7 @@ namespace NCL {
 
 		typedef std::function<void(FluidGameObject*)> FluidGameObjectFunc;
 		typedef std::vector<FluidGameObject*>::const_iterator FluidGameObjectIterator;
+
 		class GameWorld	{
 		public:
 			GameWorld();

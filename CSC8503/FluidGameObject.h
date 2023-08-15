@@ -43,14 +43,18 @@ namespace NCL::CSC8503 {
 		}
 
 		ParticleProperties* AddParticleToStruct(FluidGameObject* ParticleProps, int PARTICLEINDEX);
-		
+
+		void SetParticlePositions(FluidGameObject* Particle, ParticleProperties ParticleProps) {
+			Vector3 position(ParticleProps.x, ParticleProps.y,ParticleProps.z);
+			Particle->transform.SetPosition(position);
+		};
 	protected:
 		Transform			transform;
-		ParticleProperties particleProperties;
+		
 		CollisionVolume* boundingVolume;
 		
 		RenderObject* renderObject;
-		
+		ParticleProperties particleProperties;
 
 		bool		isActive;
 		int			worldID;

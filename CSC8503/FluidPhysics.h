@@ -31,12 +31,14 @@ namespace NCL {
 				NCL::Maths::Vector3 volume;
 
 			};
+			ParticleProperties ParticlePropsGlobal[9];
 		protected:
 			/*void AddParticleToStruct(FluidGameObject particle, int PARTICLEINDEX);*/
 			void NearestNeighbour();
 			void FluidCollision();
 			void UpdateParticlePositions();
 			void ClearFluids();
+			
 			GameWorld& gameWorld;
 			GLuint ssbo;
 			GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
@@ -46,6 +48,7 @@ namespace NCL {
 			size_t fluidCount;
 			//compute shader
 			OGLComputeShader* NNScomputeShader;
+			
 		};
 	}
 }

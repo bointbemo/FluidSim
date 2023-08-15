@@ -23,15 +23,20 @@ FluidGameObject::~FluidGameObject() {
 	
 }
 ParticleProperties* FluidGameObject::AddParticleToStruct( FluidGameObject* ParticleProps,int PARTICLEINDEX) {
-	Vector3 position = this->GetTransform().GetPosition(); // test values need changed
-	Vector3 volume = this->GetTransform().GetScale();
-	float mass = 1.0;
+	
+	Transform& transformA = ParticleProps->GetTransform();
+	Vector3 position = transformA.GetPosition(); // test values need changed
+	Vector3 volume = transformA.GetScale();
+	float mass = 1.0 ;
 	float density = 0.5;
-	ParticleProps->particleProperties.density = density;
+	/*ParticleProps->particleProperties.density = density;
 	ParticleProps->particleProperties.volume = volume;
-	ParticleProps->particleProperties.mass = mass;
-	ParticleProps->particleProperties.position = position;
-
+	ParticleProps->particleProperties.mass = mass;*/
+	ParticleProps->particleProperties.x = position.x;
+	ParticleProps->particleProperties.y = position.y;
+	ParticleProps->particleProperties.z = position.z;
+	ParticleProps->particleProperties.empty = 0;
+	
 	return &ParticleProps->particleProperties;
 
 	

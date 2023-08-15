@@ -50,7 +50,7 @@ void TutorialGame::InitialiseAssets() {
 
 	basicTex	= renderer->LoadTexture("checkerboard.png");
 	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
-	FluidShader = renderer->LoadShader("scene.vert", "FluidShader.frag");
+	FluidShader = renderer->LoadShader("scene.vert", "scene.frag");
 	InitCamera();
 	InitWorld();
 }
@@ -272,7 +272,8 @@ void TutorialGame::InitWorld() {
 	//BridgeConstraintTest();
 
 	AddFluidToWorld(Vector3(0,0,0),Vector3(0.1,0.1,0.1));
-	//AddCubeToWorld(Vector3(1, 1, 1), Vector3(1, 1, 1));
+    AddCubeToWorld(Vector3(1, 1, 1), Vector3(1, 1, 1));
+	AddCubeToWorld(Vector3(1, 1, 1), Vector3(1, 1, 1));
 }
 
 /*
@@ -353,7 +354,7 @@ FluidGameObject* TutorialGame::AddFluidParticleToWorld(const Vector3& position, 
 
 	fluid->GetTransform().SetPosition(position).SetScale(dimensions * 5);
 
-	fluid->SetRenderObject(new RenderObject(&fluid->GetTransform(), sphereMesh, basicTex, FluidShader));
+	fluid->SetRenderObject(new RenderObject(&fluid->GetTransform(), sphereMesh, basicTex, basicShader));
 	world->AddFluidGameObject(fluid);
 
 	
