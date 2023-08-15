@@ -73,11 +73,11 @@ void GameWorld::GetObjectIterators(
 	first	= gameObjects.begin();
 	last	= gameObjects.end();
 }
-void GameWorld::GetFluidObjectIterators(FluidGameObjectIterator& first, FluidGameObjectIterator& last, int* size) const {
+void GameWorld::GetFluidObjectIterators(FluidGameObjectIterator& first, FluidGameObjectIterator& last) const {
 
 	first = fluidObjects.begin();
 	last = fluidObjects.end();
-	*size = fluidObjects.size();
+	
 }
 
 void GameWorld::OperateOnContents(GameObjectFunc f) {

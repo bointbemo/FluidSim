@@ -31,7 +31,7 @@ namespace NCL {
 			void RemoveGameObject(GameObject* o, bool andDelete = false);
 			void AddFluidGameObject(FluidGameObject* o);
 			void RemoveFluidGameObject(FluidGameObject* o, bool andDelete = false);
-			void GetFluidObjectIterators(FluidGameObjectIterator& first, FluidGameObjectIterator& last, int* size)const;
+			void GetFluidObjectIterators(FluidGameObjectIterator& first, FluidGameObjectIterator& last)const;
 			void AddConstraint(Constraint* c);
 			void RemoveConstraint(Constraint* c, bool andDelete = false);
 

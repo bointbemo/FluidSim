@@ -2,7 +2,7 @@
 
 uniform vec4 		objectColour;
 uniform sampler2D 	mainTex;
-uniform sampler2DShadow shadowTex;
+//uniform sampler2DShadow shadowTex;
 
 uniform vec3	lightPos;
 uniform float	lightRadius;
@@ -42,27 +42,27 @@ void main(void)
 	
 	vec4 albedo = IN.colour;
 	
-	if(hasTexture) {
-	 albedo *= texture(mainTex, IN.texCoord);
-	}
+	//if(hasTexture) {
+	// albedo *= texture(mainTex, IN.texCoord);
+	//}
 	
-	albedo.rgb = pow(albedo.rgb, vec3(2.2));
+	//albedo.rgb = pow(albedo.rgb, vec3(2.2));
 	
-	fragColor.rgb = albedo.rgb * 0.05f; //ambient
+	//fragColor.rgb = albedo.rgb * 0.05f; //ambient
 	
-	fragColor.rgb += albedo.rgb * lightColour.rgb * lambert * shadow; //diffuse light
+	//fragColor.rgb += albedo.rgb * lightColour.rgb * lambert * shadow; //diffuse light
 	
-	fragColor.rgb += lightColour.rgb * sFactor * shadow; //specular light
+	//fragColor.rgb += lightColour.rgb * sFactor * shadow; //specular light
 	
-	fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2f));
+	//fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2f));
 	
-	fragColor.a = albedo.a;
+	//fragColor.a = albedo.a;
 
-//fragColor.rgb = IN.normal;
+fragColor.rgb = IN.normal;
 
-	//fragColor = IN.colour;
+	fragColor = IN.colour;
 	
-	//fragColor.xy = IN.texCoord.xy;
+	fragColor.xy = IN.texCoord.xy;
 	
-	//fragColor = IN.colour;
+	fragColor = IN.colour;
 }

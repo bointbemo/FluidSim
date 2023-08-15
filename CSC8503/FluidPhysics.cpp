@@ -8,27 +8,13 @@
 using namespace NCL;
 using namespace Rendering;
 using namespace CSC8503;
-struct shader_data_t
-{
-	float camera_position[4];
-	float light_position[4];
-	float light_diffuse[4];
-} shader_data;
-struct SSBO
-{
-	
-	float mass[4];
-	Vector3 position[4];
 
-
-
-} ShaderBuff;
 FluidPhysics::FluidPhysics(GameWorld& world) : OGLRenderer(*Window::GetWindow()), gameWorld(world) {
 	NNScomputeShader = new OGLComputeShader("computeShader.comp");
 	GLvoid* p;
 	glGenBuffers(1, &ssbo);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(shader_data), &shader_data, GL_DYNAMIC_COPY);
+	
 	
 
 };
@@ -49,16 +35,13 @@ void FluidPhysics::Update(float dt) {
 } 
 
 void FluidPhysics::NearestNeighbour() {
-	glDisable(GL_DEPTH_TEST);
+	
 	std::vector<FluidGameObject*>::const_iterator first;
 	std::vector<FluidGameObject*>::const_iterator last;
+	ParticleProperties ParticlePropslocal[1024];
+	ParticleProperties ParticlePropsOut[1024];
 	int* size = new int;
-
-	
-	gameWorld.GetFluidObjectIterators(first, last, size);
-
-	ParticleProperties ParticlePropslocal[9];
-	ParticleProperties ParticlePropsOut[9];
+	gameWorld.GetFluidObjectIterators(first, last);
 	int j = 0;
 	for (auto i = first; i != last; ++i) {
 		/*ParticlePropslocal[j].density = (*i)->AddParticleToStruct(*i, j)->density;
@@ -70,27 +53,25 @@ void FluidPhysics::NearestNeighbour() {
 		j++;
 	}
 
-	int it;
-	
-	//  /*invalidate makes a big difference when re-writting*/
-	
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, 3 * sizeof(ParticlePropslocal), &ParticlePropslocal[0], GL_DYNAMIC_COPY);
+
+	//glBufferStorage(GL_SHADER_STORAGE_BUFFER, sizeof(ParticlePropslocal), &ParticlePropslocal[0], GL_CLIENT_STORAGE_BIT | GL_MAP_READ_BIT );
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(ParticlePropslocal), &ParticlePropslocal[0], GL_DYNAMIC_COPY);
 	
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo);
 	
 	
 	NNScomputeShader->Bind();
-	NNScomputeShader->Execute(9, 1, 1);
+	NNScomputeShader->Execute(1024, 1, 1);
 	NNScomputeShader->Unbind();
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	
 	/*glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);*/
 	GLfloat* ptr;
-	ptr = (GLfloat*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+	ptr = (GLfloat*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY); 
+	//ptr = (GLfloat*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(ParticlePropslocal), GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 	int itt = 0;
-	for (int i = 0; i < 36; i = i+ 4){
+	for (int i = 0; i < 4 * 1024; i = i + 4){ //return particles from 
 		
 		ParticlePropsOut[itt].x = ptr[i];
 		ParticlePropsOut[itt].y = ptr[i + 1];
@@ -98,13 +79,15 @@ void FluidPhysics::NearestNeighbour() {
 		ParticlePropsOut[itt].empty = 0;
 		itt++;
 }
-	int ittt = 0;
+	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	
 	j = 0;
 	for (auto i = first; i != last; ++i) {
 		(*i)->SetParticlePositions(*i, ParticlePropsOut[j]);
+		j++;
 	}
-	delete size;
+
+
 	
 	
 };

@@ -115,7 +115,7 @@ void GameTechRenderer::RenderFrame  () {
 	BuildFluidList();
 	SortObjectList();
 	//RenderFluid();
-	RenderShadowMap();
+	//RenderShadowMap();
 	//RenderSkybox();
 	glEnable(GL_DEPTH_TEST);
 	RenderCamera();
@@ -263,6 +263,7 @@ void GameTechRenderer::RenderSkybox() {
 }
 
 void GameTechRenderer::RenderCamera() {
+	glEnable(GL_DEPTH_TEST);
 	float screenAspect = (float)windowWidth / (float)windowHeight;
 	Matrix4 viewMatrix = gameWorld.GetMainCamera()->BuildViewMatrix();
 	Matrix4 projMatrix = gameWorld.GetMainCamera()->BuildProjectionMatrix(screenAspect);

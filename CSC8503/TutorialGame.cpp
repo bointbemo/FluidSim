@@ -13,7 +13,7 @@
 
 using namespace NCL;
 using namespace CSC8503;
-const int PARTICLE_NUM = 10;
+const int PARTICLE_NUM = 1024;
 
 
 TutorialGame::TutorialGame()	{
@@ -272,8 +272,8 @@ void TutorialGame::InitWorld() {
 	//BridgeConstraintTest();
 
 	AddFluidToWorld(Vector3(0,0,0),Vector3(0.1,0.1,0.1));
-    AddCubeToWorld(Vector3(1, 1, 1), Vector3(1, 1, 1));
-	AddCubeToWorld(Vector3(1, 1, 1), Vector3(1, 1, 1));
+   // AddCubeToWorld(Vector3(1, 1, 1), Vector3(1, 1, 1));
+	
 }
 
 /*
@@ -338,7 +338,7 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 void TutorialGame::AddFluidToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
 	
 	for (int PARTICLE = 1; PARTICLE < PARTICLE_NUM; PARTICLE++) {
-		Vector3 Position(PARTICLE,PARTICLE,PARTICLE);
+		Vector3 Position(PARTICLE,0,0);
 		AddFluidParticleToWorld(position + Position, dimensions, inverseMass, PARTICLE);
 		
 	}
@@ -352,7 +352,7 @@ FluidGameObject* TutorialGame::AddFluidParticleToWorld(const Vector3& position, 
 	FluidVolume* volume = new FluidVolume(dimensions.x, dimensions.x);
 	fluid->SetBoundingVolume((CollisionVolume*)volume);
 
-	fluid->GetTransform().SetPosition(position).SetScale(dimensions * 5);
+	fluid->GetTransform().SetPosition(position).SetScale(dimensions * 10);
 
 	fluid->SetRenderObject(new RenderObject(&fluid->GetTransform(), sphereMesh, basicTex, basicShader));
 	world->AddFluidGameObject(fluid);
