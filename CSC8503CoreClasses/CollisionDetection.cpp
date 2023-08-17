@@ -143,10 +143,21 @@ bool CollisionDetection::RaySphereIntersection(const Ray& r, const Transform& wo
 bool CollisionDetection::RayCapsuleIntersection(const Ray& r, const Transform& worldTransform, const CapsuleVolume& volume, RayCollision& collision) {
 	return false;
 }
+bool CollisionDetection::CreateNeighbourhood(FluidGameObject* a, FluidGameObject* b, FluidCollisionInfo& collisionInfo) {
+	const CollisionVolume* volA = a->GetBoundingVolume();
+	const CollisionVolume* volB = b->GetBoundingVolume();
+	
+	collisionInfo.a = a;
+	collisionInfo.b = b;
 
+	Transform& transformA = a->GetTransform();
+	Transform& transformB = b->GetTransform();
+	return FluidNeighbourhood((FluidVolume&)*volA, transformA, (FluidVolume&)*volB, transformB, collisionInfo);
+}
 bool CollisionDetection::ObjectIntersection(GameObject* a, GameObject* b, CollisionInfo& collisionInfo) {
 	const CollisionVolume* volA = a->GetBoundingVolume();
 	const CollisionVolume* volB = b->GetBoundingVolume();
+	
 
 	if (!volA || !volB) {
 		return false;
@@ -316,7 +327,24 @@ bool CollisionDetection::FluidAABBIntersection(const AABBVolume& volumeA, const 
 	}
 	return false;
 }
+bool CollisionDetection::FluidNeighbourhood(const FluidVolume& volumeA, const Transform& worldTransformA,
+	const FluidVolume& volumeB, const Transform& worldTransformB, FluidCollisionInfo& collisionInfo) {
+	float radii = volumeA.GetRadius() + volumeB.GetRadius();
+	Vector3 delta = worldTransformB.GetPosition() - worldTransformA.GetPosition();
 
+	float deltaLength = delta.Length() + radii*5;
+
+	if (deltaLength < radii) {
+		float weight = (radii - deltaLength);
+		Vector3 normal = delta.Normalised();
+		Vector3 localA = normal * volumeA.GetRadius();
+		Vector3 localB = -normal * volumeB.GetRadius();
+
+		collisionInfo.AddNeighbourInfo(localA, localB, normal, weight);
+		return true; // Collising
+	}
+	return false;
+}
 //Sphere / Sphere Collision
 bool CollisionDetection::SphereIntersection(const SphereVolume& volumeA, const Transform& worldTransformA,
 	const SphereVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) {

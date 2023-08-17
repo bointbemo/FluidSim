@@ -41,4 +41,14 @@ ParticleProperties* FluidGameObject::AddParticleToStruct( FluidGameObject* Parti
 
 	
 };
-
+void FluidGameObject::UpdateNeighbourhoodSize() {
+	 float r = ((FluidVolume&)*boundingVolume).GetRadius();
+	 NeighbourhoodSize = Vector3(r, r, r);
+}
+bool FluidGameObject::GetNeighbourhoodSize(Vector3& outSize) const {
+	if (!boundingVolume) {
+		return false;
+	}
+	outSize = NeighbourhoodSize;
+	return true;
+}

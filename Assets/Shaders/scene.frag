@@ -26,9 +26,8 @@ out vec4 fragColor;
 void main(void)
 {
 	float shadow = 1.0; // New !
-	
 	if( IN . shadowProj . w > 0.0) { // New !
-		shadow = textureProj ( shadowTex , IN . shadowProj ) * 0.5f;
+		//shadow = textureProj ( shadowTex , IN . shadowProj ) * 0.5f;
 	}
 
 	vec3  incident = normalize ( lightPos - IN.worldPos );
@@ -42,9 +41,9 @@ void main(void)
 	
 	vec4 albedo = IN.colour;
 	
-	//if(hasTexture) {
-	// albedo *= texture(mainTex, IN.texCoord);
-	//}
+	if(hasTexture) {
+	 albedo *= texture(mainTex, IN.texCoord);
+	}
 	
 	//albedo.rgb = pow(albedo.rgb, vec3(2.2));
 	
@@ -56,7 +55,7 @@ void main(void)
 	
 	//fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2f));
 	
-	//fragColor.a = albedo.a;
+	fragColor.a = albedo.a;
 
 fragColor.rgb = IN.normal;
 
@@ -64,5 +63,4 @@ fragColor.rgb = IN.normal;
 	
 	fragColor.xy = IN.texCoord.xy;
 	
-	fragColor = IN.colour;
 }

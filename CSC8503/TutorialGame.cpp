@@ -272,7 +272,10 @@ void TutorialGame::InitWorld() {
 	//BridgeConstraintTest();
 
 	AddFluidToWorld(Vector3(0,0,0),Vector3(0.1,0.1,0.1));
-   // AddCubeToWorld(Vector3(1, 1, 1), Vector3(1, 1, 1));
+    //AddCubeToWorld(Vector3(1, 1, 1), Vector3(1, 1, 1));
+	//AddCubeToWorld(Vector3(1, 1, 1), Vector3(1, 1, 1));
+	//AddCubeToWorld(Vector3(1, 1, 1), Vector3(1, 1, 1));
+	//AddCubeToWorld(Vector3(1000, 1, 1), Vector3(1, 1, 1));
 	
 }
 
@@ -336,12 +339,25 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	return sphere;
 }
 void TutorialGame::AddFluidToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
-	
-	for (int PARTICLE = 1; PARTICLE < PARTICLE_NUM; PARTICLE++) {
-		Vector3 Position(PARTICLE,0,0);
-		AddFluidParticleToWorld(position + Position, dimensions, inverseMass, PARTICLE);
+	std::srand(1024);
+	float h = 1; // particle seperation
+	float particleSeperation = h + 0.1f;
+	for (int i = 0; i < PARTICLE_NUM; i++) {
 		
-	}
+				
+				float ranX = (float(rand()) / float((RAND_MAX)) * 0.5f - 1) * h / 10;
+				float ranY = (float(rand()) / float((RAND_MAX)) * 0.5f - 1) * h / 10;
+				float ranZ = (float(rand()) / float((RAND_MAX)) * 0.5f - 1) * h / 10;
+				Vector3 ParticlePos = Vector3(  particleSeperation + 1024* ranX - 1.5f,  particleSeperation + 1024* ranY + h + 0.1f,  particleSeperation + 1024* ranZ - 1.5f);
+				
+				/*for (int PARTICLE = 1; PARTICLE < PARTICLE_NUM; PARTICLE++) {
+					Vector3 Position(PARTICLE, 0, 0);
+					AddFluidParticleToWorld(position + Position, dimensions, inverseMass, PARTICLE);
+				};*/
+			
+				AddFluidParticleToWorld(ParticlePos, dimensions, inverseMass, i);
+
+			}
 	
 
 }

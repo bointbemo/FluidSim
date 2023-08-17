@@ -95,14 +95,14 @@ void PhysicsSystem::Update(float dt) {
 	int iteratorCount = 0;
 	while(dTOffset > realDT) {
 		IntegrateAccel(realDT); //Update accelerations from external forces
-		if (useBroadPhase) {
+		//if (useBroadPhase) {
 			BroadPhase();
 			NarrowPhase();
-		}
-		else {
-			BasicCollisionDetection();
-		}
-
+		//}
+		//else {
+		//	BasicCollisionDetection();
+		//}
+//
 		//This is our simple iterative solver - 
 		//we just run things multiple times, slowly moving things forward
 		//and then rechecking that the constraints have been met		
@@ -300,11 +300,11 @@ void PhysicsSystem::BroadPhase() {
 	std::vector<GameObject*>::const_iterator last;
 	gameWorld.GetObjectIterators(first, last);
 	for (auto i = first; i != last; ++i) {
-		Vector3 halfSizes;
-		if (!(*i)->GetBroadphaseAABB(halfSizes))
+		Vector3 radius;
+		if (!(*i)->GetBroadphaseAABB(radius))
 			continue;
 		Vector3 pos = (*i)->GetTransform().GetPosition();
-		tree.Insert(*i, pos, halfSizes);
+		tree.Insert(*i, pos, radius);
 	}
 	tree.OperateOnContents([&](std::list<QuadTreeEntry<GameObject*>>& data) {
 		CollisionDetection::CollisionInfo info;

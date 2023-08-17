@@ -48,11 +48,12 @@ namespace NCL::CSC8503 {
 			Vector3 position(ParticleProps.x, ParticleProps.y,ParticleProps.z);
 			Particle->transform.SetPosition(position);
 		};
+		void UpdateNeighbourhoodSize();
+		
+		bool GetNeighbourhoodSize(Vector3& outSize) const;
 	protected:
 		Transform			transform;
-		
 		CollisionVolume* boundingVolume;
-		
 		RenderObject* renderObject;
 		ParticleProperties particleProperties;
 
@@ -60,6 +61,7 @@ namespace NCL::CSC8503 {
 		int			worldID;
 		std::string	name;
 
-		Vector3 broadphaseAABB;
+		Vector3 NeighbourhoodSize;
+
 	};
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Camera.h"
-
+#include "../CSC8503/FluidGameObject.h"
 #include "Transform.h"
 #include "GameObject.h"
 #include "FluidVolume.h"
@@ -60,6 +60,44 @@ namespace NCL {
 				return false;
 			}
 		};
+		struct FluidCollisionInfo { //for neighbourhood search 
+			FluidGameObject* a;
+			FluidGameObject* b;
+			int		framesLeft;
+
+			ContactPoint point;
+
+			FluidCollisionInfo() {
+
+			}
+
+			void AddNeighbourInfo(const Vector3& localA, const Vector3& localB, const Vector3& normal, float p) {
+				point.localA = localA;
+				point.localB = localB;
+				point.normal = normal;
+				point.penetration = p;
+			}
+
+			//Advanced collision detection / resolution
+			bool operator < (const FluidCollisionInfo& other) const {
+				size_t otherHash = (size_t)other.a + ((size_t)other.b << 32);
+				size_t thisHash = (size_t)a + ((size_t)b << 32);
+
+				if (thisHash < otherHash) {
+					return true;
+				}
+				return false;
+			}
+
+			bool operator ==(const FluidCollisionInfo& other) const {
+				if (other.a == a && other.b == b) {
+					return true;
+				}
+				return false;
+			}
+		};
+		static bool FluidNeighbourhood(const FluidVolume& volumeA, const Transform& worldTransformA,
+			const FluidVolume& volumeB, const Transform& worldTransformB, FluidCollisionInfo& collisionInfo);
 
 		static bool AABBCapsuleIntersection(
 			const CapsuleVolume& volumeA, const Transform& worldTransformA,
@@ -90,7 +128,7 @@ namespace NCL {
 
 
 		static bool ObjectIntersection(GameObject* a, GameObject* b, CollisionInfo& collisionInfo);
-
+		static bool CreateNeighbourhood(FluidGameObject* a, FluidGameObject* b, FluidCollisionInfo& collisionInfo);
 
 		static bool AABBIntersection(	const AABBVolume& volumeA, const Transform& worldTransformA,
 										const AABBVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo);
