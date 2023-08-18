@@ -32,8 +32,10 @@ namespace NCL {
 
 			};
 			ParticleProperties ParticlePropsGlobal[9];
+			GLuint PARTICLESSBO;
+
 		protected:
-			/*void AddParticleToStruct(FluidGameObject particle, int PARTICLEINDEX);*/
+			
 			void NearestNeighbour();
 			void SetNeighbourhoodLists();
 			void FluidCollision();
@@ -41,16 +43,23 @@ namespace NCL {
 			void ClearFluids();
 			void ComputeForces();
 			void ComputeDensity();
+			void initialPositionData();
 			std::set < CollisionDetection::FluidCollisionInfo > Neighbourhood;
 			GameWorld& gameWorld;
-			GLuint ssbo;
-			GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
-			GLvoid* p;
+			GLuint Positionssbo;
+			GLuint Densityssbo;
+			GLuint Forcessbo;
+			GLuint Pressuressbo;
+			GLuint Velocityssbo;
 			// data input
 			GLuint fluidbuffer;
 			size_t fluidCount;
 			//compute shader
-			OGLComputeShader* NNScomputeShader;
+			//GLfloat* ptr;
+			OGLComputeShader* PositioncomputeShader;
+			OGLComputeShader* ForcecomputeShader;
+			OGLComputeShader* DensitycomputeShader;
+			
 			float	dTOffset;
 			
 		};

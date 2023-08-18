@@ -8,17 +8,37 @@
 #define PI 3.141592741f
 
 layout (local_size_x = 9, local_size_y = 1, local_size_z = 1) in;
-
 struct Particle
 {
     vec4 position;
     
 };
 
-layout(std430, binding = 1) buffer PARTICLES
+layout(std430, binding = 0) buffer PARTICLES
 {
     vec4 particles[];
 };
+
+layout(std430, binding = 1) buffer VELOCITY
+{
+    vec4 velcoity[];
+};
+
+layout(std430, binding = 2) buffer FORCE
+{
+    vec4 force[];
+};
+
+layout(std430, binding = 3) buffer PRESSURE
+{
+    float pressure[];
+};
+
+layout(std430, binding = 3) buffer DENSITY
+{
+    float density[];
+};
+
 
 
 const float GAS_CONST = 2000.0f; // const for equation of state
@@ -34,7 +54,7 @@ float rho = 0.0f;
     for (int p = 0; p < 1024; p++){
     vec4 delta = particles[i] - particles[p];
     float deltalength = length(delta);
-    if (deltalength<radii){particles[p].z = 1;}
+    if (deltalength<radii){particles[p].w = 1;}
     }
     // Iterate through all particles
     

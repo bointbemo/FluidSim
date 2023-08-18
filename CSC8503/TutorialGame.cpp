@@ -31,6 +31,8 @@ TutorialGame::TutorialGame()	{
 	inSelectionMode = false;
 
 	InitialiseAssets();
+	
+	
 }
 
 /*
