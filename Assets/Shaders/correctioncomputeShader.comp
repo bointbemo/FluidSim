@@ -50,7 +50,7 @@ void main()
 {
 {
     uint i = gl_GlobalInvocationID.x;
-int boundary = 10;
+
     // integrate
     if(particles[i].density==0){particles[i].density = 100;};
     if(particles[i].density>1000){particles[i].density =1000;};
@@ -59,34 +59,34 @@ int boundary = 10;
     vec4 new_position = vec4(particles[i].x,particles[i].y,particles[i].z,0) + TIME_STEP * new_velocity;
 
     // boundary conditions
-    if (new_position.x < -boundary)
+    if (new_position.x < -10)
     {
-        new_position.x = -boundary;
+        new_position.x = -10;
         new_velocity.x *= -1 *WALL_DAMPING;
     }
-    else if (new_position.x > boundary)
+    else if (new_position.x > 10)
     {
-        new_position.x = boundary;
+        new_position.x = 10;
         new_velocity.x *= -1 *WALL_DAMPING;
     }
-     if (new_position.y < -boundary)
+     if (new_position.y < -10)
     {
-        new_position.y = -boundary;
+        new_position.y = -10;
         new_velocity.y *= -1* WALL_DAMPING;
     }
-    else if (new_position.y >boundary)
+    else if (new_position.y >15)
     {
-        new_position.y = boundary;
+        new_position.y = 15;
         new_velocity.y *= -1 * WALL_DAMPING;
     }
-       if (new_position.z < -boundary)
+       if (new_position.z < -10)
     {
-        new_position.z = -boundary;
+        new_position.z = -10;
         new_velocity.z *= -1 * WALL_DAMPING;
     }
-    else if (new_position.z > boundary)
+    else if (new_position.z > 5)
     {
-        new_position.z = boundary;
+        new_position.z = 5;
         new_velocity.z *= -1 * WALL_DAMPING;
     }
 

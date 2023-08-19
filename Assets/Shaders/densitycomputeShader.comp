@@ -1,0 +1,78 @@
+#version 440
+
+#define WORK_GROUP_SIZE 7200
+#define NUM_PARTICLES 7200
+#define PARTICLE_RADIUS 0.1
+// constants
+
+
+#define PI 3.1415927410125732421875f
+
+#define PARTICLE_DENSITY_START 1000
+
+#define PARTICLE_MASS 1000
+#define SMOOTHING_LENGTH (6 * PARTICLE_RADIUS)
+
+#define PARTICLE_STIFFNESS 1000
+// For calculations
+
+
+layout (local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
+
+struct Particle
+{
+ 	        float x; //position
+			float y;
+			float z;
+			float empty;
+			
+			float velocityx;//velocity
+			float velocityy;
+			float velocityz;
+			float vempty;
+			
+			float forcex;//force
+			float forcey;
+			float forcez;
+			float fempty;
+			
+			float density;//density
+			float dempty;
+			
+			float pressure;//presure
+			float pempty;
+    
+};
+
+layout(std430, binding = 1) buffer PARTICLES
+{
+Particle particles[];
+};
+
+
+
+const float GAS_CONST = 2000.0f; // const for equation of state
+
+void main()
+{
+
+     uint i = gl_GlobalInvocationID.x;
+    float r = 0.0f;
+    // compute density
+     float density_sum = 0.0f;
+     vec4 delta = vec4(0,0,0,0);
+    for (int j = 0; j < NUM_PARTICLES; j++)
+    {
+        delta = vec4(particles[i].x,particles[i].y,particles[i].z,0)-vec4(particles[j].x, particles[j].y, particles[j].z,0);
+         r = length(delta);
+        if (r < SMOOTHING_LENGTH)
+        {
+            density_sum += PARTICLE_MASS * 315.f * pow(SMOOTHING_LENGTH * SMOOTHING_LENGTH - r * r, 3) / (64.f * PI * pow(SMOOTHING_LENGTH, 9));
+        }
+    }
+
+if(density_sum>5000){density_sum=5000; };
+    particles[i].density = density_sum;
+    // compute pressure
+    particles[i].pressure = max(PARTICLE_STIFFNESS * (density_sum - PARTICLE_DENSITY_START), 0.f);
+}

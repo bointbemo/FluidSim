@@ -23,14 +23,7 @@ namespace NCL {
 			~FluidPhysics();
 			void Update(float dt);
 			
-			struct ParticleProperty {
-				NCL::Maths::Vector3 position;
-				float density;
-				float mass;
-				NCL::Maths::Vector3 dimensions;
-				NCL::Maths::Vector3 volume;
-
-			};
+		
 			ParticleProperties ParticlePropsGlobal[9];
 		protected:
 			/*void AddParticleToStruct(FluidGameObject particle, int PARTICLEINDEX);*/
@@ -50,7 +43,9 @@ namespace NCL {
 			GLuint fluidbuffer;
 			size_t fluidCount;
 			//compute shader
-			OGLComputeShader* NNScomputeShader;
+			OGLComputeShader* PositioncomputeShader;
+			OGLComputeShader* ForcecomputeShader;
+			OGLComputeShader* DensitycomputeShader;
 			float	dTOffset;
 			
 		};

@@ -13,7 +13,7 @@
 
 using namespace NCL;
 using namespace CSC8503;
-const int PARTICLE_NUM = 1024;
+const int PARTICLE_NUM = 7200;
 
 
 TutorialGame::TutorialGame()	{
@@ -348,19 +348,34 @@ void TutorialGame::AddFluidToWorld(const Vector3& position, Vector3 dimensions, 
 				float ranX = (float(rand()) / float((RAND_MAX)) * 0.5f - 1) * h / 10;
 				float ranY = (float(rand()) / float((RAND_MAX)) * 0.5f - 1) * h / 10;
 				float ranZ = (float(rand()) / float((RAND_MAX)) * 0.5f - 1) * h / 10;
-				Vector3 ParticlePos = Vector3(  particleSeperation + 1024* ranX - 1.5f,  particleSeperation + 1024* ranY + h + 0.1f,  particleSeperation + 1024* ranZ - 1.5f);
-				
+				Vector3 ParticlePos = Vector3(  particleSeperation + 100* ranX - 1.5f,  particleSeperation + 100* ranY + h + 0.1f,  particleSeperation + 100* ranZ - 1.5f);
+				AddFluidParticleToWorld(ParticlePos, dimensions, inverseMass, i);
 				/*for (int PARTICLE = 1; PARTICLE < PARTICLE_NUM; PARTICLE++) {
 					Vector3 Position(PARTICLE, 0, 0);
 					AddFluidParticleToWorld(position + Position, dimensions, inverseMass, PARTICLE);
 				};*/
-			
-				AddFluidParticleToWorld(ParticlePos, dimensions, inverseMass, i);
+				/*for (auto i = 0, x = 0, y = 0, z = 0;i < PARTICLE_NUM; i++)
+				{
+					Vector3 ParticlePos = Vector3(-1 + 0.1 * 2 * x, -1 + 0.1 * 2 * y, -1 + 0.1 * 2 * z);
+					
+				
+                    AddFluidParticleToWorld(ParticlePos, dimensions, inverseMass, i);
+					x++;
+					if (x >= 100)
+					{
+						x = 0;
+						y++;
+						if (y >= 100) {
+							y = 0;
+							z++;
+						}
+					}
+				}*/
+				
 
 			}
-	
-
 }
+	
 
 FluidGameObject* TutorialGame::AddFluidParticleToWorld(const Vector3& position, Vector3 dimensions, float inverseMass,int PARTICLE_INDEX) {
 	FluidGameObject* fluid = new FluidGameObject();
@@ -368,7 +383,7 @@ FluidGameObject* TutorialGame::AddFluidParticleToWorld(const Vector3& position, 
 	FluidVolume* volume = new FluidVolume(dimensions.x, dimensions.x);
 	fluid->SetBoundingVolume((CollisionVolume*)volume);
 
-	fluid->GetTransform().SetPosition(position).SetScale(dimensions * 10);
+	fluid->GetTransform().SetPosition(position).SetScale(dimensions);
 
 	fluid->SetRenderObject(new RenderObject(&fluid->GetTransform(), sphereMesh, basicTex, basicShader));
 	world->AddFluidGameObject(fluid);

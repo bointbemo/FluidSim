@@ -7,15 +7,27 @@
 namespace NCL {
 	namespace CSC8503 {
 		struct ParticleProperties {
-			/*NCL::Maths::Vector4 position;
-			float density;
-			float mass;
-			NCL::Maths::Vector3 dimensions;
-			NCL::Maths::Vector3 volume;*/
-			float x;
+			
+			float x; //position
 			float y;
 			float z;
 			float empty;
+			
+			float velocityx;//velocity
+			float velocityy;
+			float velocityz;
+			float vempty;
+			
+			float forcex;//force
+			float forcey;
+			float forcez;
+			float fempty;
+			
+			float density;//density
+			float dempty;
+			
+			float pressure;//presure
+			float pempty;
 
 		};
 	};

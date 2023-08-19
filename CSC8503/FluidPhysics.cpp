@@ -16,12 +16,14 @@ using namespace CSC8503;
 
 const int   idealHZ = 120;
 const float idealDT = 1.0f / idealHZ;
-
+ bool initial = false;
 int realhz = idealHZ;
 float realdt = idealDT;
 
 FluidPhysics::FluidPhysics(GameWorld& world) : OGLRenderer(*Window::GetWindow()), gameWorld(world) {
-	NNScomputeShader = new OGLComputeShader("computeShader.comp");
+	PositioncomputeShader = new OGLComputeShader("computeShader.comp"); // position commpute shader
+	ForcecomputeShader = new OGLComputeShader("forcecomputeShader.comp");
+	DensitycomputeShader = new OGLComputeShader("densitycomputeShader.comp");
 	GLvoid* p;
 	float	dTOffset = 0;
 	glGenBuffers(1, &ssbo);
@@ -31,7 +33,10 @@ FluidPhysics::FluidPhysics(GameWorld& world) : OGLRenderer(*Window::GetWindow())
 
 };
 FluidPhysics::~FluidPhysics() {
-	/*delete NNScomputeShader;*/
+	delete PositioncomputeShader;
+	delete ForcecomputeShader;
+	delete DensitycomputeShader;
+
 	delete p;
 	glDeleteFramebuffers(1, &ssbo);
 };
@@ -42,13 +47,14 @@ void FluidPhysics::Update(float dt) {
 	
 	int iteratorCount = 0;
 	dTOffset += dt; //We accumulate time delta here - there might be remainders from previous frame!
-	if (dTOffset/ realdt > 120) {
-	//NearestNeighbour();
-	}
-		ComputeForces();
+	
+	UpdateParticlePositions();
+	//if (dTOffset / realdt > 120) {
 		ComputeDensity();
-		FluidCollision();
-		UpdateParticlePositions();
+		ComputeForces();
+
+	//}
+		
 		float updateTime = t.GetTimeDeltaSeconds();
 		iteratorCount++;
 	/*}*/
@@ -107,65 +113,100 @@ void FluidPhysics::FluidCollision() {
 
 };
 void FluidPhysics::UpdateParticlePositions() {
-
+	
 	std::vector<FluidGameObject*>::const_iterator first;
 	std::vector<FluidGameObject*>::const_iterator last;
-	ParticleProperties ParticlePropslocal[1024];
-	ParticleProperties ParticlePropsOut[1024];
+	ParticleProperties ParticlePropslocal[7200];
+	ParticleProperties ParticlePropsOut[7200];
 	int* size = new int;
 	gameWorld.GetFluidObjectIterators(first, last);
 	int j = 0;
-	for (auto i = first; i != last; ++i) {
-		/*ParticlePropslocal[j].density = (*i)->AddParticleToStruct(*i, j)->density;
-		/*ParticlePropslocal[j].mass = (*i)->AddParticleToStruct(*i, j)->mass;*/
-		ParticlePropslocal[j].x = (*i)->AddParticleToStruct(*i, j)->x;
-		ParticlePropslocal[j].y = (*i)->AddParticleToStruct(*i, j)->y;
-		ParticlePropslocal[j].z = (*i)->AddParticleToStruct(*i, j)->z;
-		ParticlePropslocal[j].empty = 0;
-		j++;
+	if (initial == false) {
+		for (auto i = first; i != last; ++i) {
+			/*ParticlePropslocal[j].density = (*i)->AddParticleToStruct(*i, j)->density;
+			/*ParticlePropslocal[j].mass = (*i)->AddParticleToStruct(*i, j)->mass;*/
+			ParticlePropslocal[j].x = (*i)->AddParticleToStruct(*i, j)->x;
+			ParticlePropslocal[j].y = (*i)->AddParticleToStruct(*i, j)->y;
+			ParticlePropslocal[j].z = (*i)->AddParticleToStruct(*i, j)->z;
+			ParticlePropslocal[j].empty = 0;
+
+			ParticlePropslocal[j].velocityx = 0;
+			ParticlePropslocal[j].velocityy = 0;
+			ParticlePropslocal[j].velocityz = 0;
+			ParticlePropslocal[j].vempty = 0;
+				
+			ParticlePropslocal[j].forcex = 0;
+			ParticlePropslocal[j].forcey = 0;
+			ParticlePropslocal[j].forcez = 0;
+			ParticlePropslocal[j].fempty = 0;
+			
+			ParticlePropslocal[j].density = 1000;
+			ParticlePropslocal[j].dempty = 0;
+			ParticlePropslocal[j].pressure = 0;
+			ParticlePropslocal[j].pempty = 0;
+			j++;
+		}
+
+
+		//glBufferStorage(GL_SHADER_STORAGE_BUFFER, sizeof(ParticlePropslocal), &ParticlePropslocal[0], GL_CLIENT_STORAGE_BIT | GL_MAP_READ_BIT );
+		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(ParticlePropslocal), &ParticlePropslocal[0], GL_DYNAMIC_COPY);
+
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo);
+		initial = true;
 	}
 
-
-	//glBufferStorage(GL_SHADER_STORAGE_BUFFER, sizeof(ParticlePropslocal), &ParticlePropslocal[0], GL_CLIENT_STORAGE_BIT | GL_MAP_READ_BIT );
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(ParticlePropslocal), &ParticlePropslocal[0], GL_DYNAMIC_COPY);
-
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo);
-
-
-	NNScomputeShader->Bind();
-	NNScomputeShader->Execute(1024, 1, 1);
-	NNScomputeShader->Unbind();
+	PositioncomputeShader->Bind();
+	PositioncomputeShader->Execute(7200/32, 1, 1);
+	PositioncomputeShader->Unbind();
+	int work_grp_cnt[3];
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &work_grp_cnt[0]);
+	glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &work_grp_cnt[1]);
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &work_grp_cnt[2]);
+	std::cout << "max work group size" << "x" << work_grp_cnt[0] << "y" << work_grp_cnt[1] << "z" << work_grp_cnt[2] << "\n";
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-	/*glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);*/
+	
 	GLfloat* ptr;
 	ptr = (GLfloat*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-	//ptr = (GLfloat*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(ParticlePropslocal), GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+	
 	int itt = 0;
-	for (int i = 0; i < 4 * 1024; i = i + 4) { //return particles from 
+	for (int i = 0; i < 16 * 7200; i = i + 16) { //return particles from 
 
 		ParticlePropsOut[itt].x = ptr[i];
 		ParticlePropsOut[itt].y = ptr[i + 1];
 		ParticlePropsOut[itt].z = ptr[i + 2];
-		ParticlePropsOut[itt].empty = 0;
+		ParticlePropsOut[itt].empty = ptr[i + 3];
+		ParticlePropsOut[itt].velocityx = ptr[i + 4];
+		ParticlePropsOut[itt].forcex = ptr[i + 8];
+		ParticlePropsOut[itt].pressure = ptr[i + 12];
+		ParticlePropsOut[itt].density = ptr[i + 14];
 		itt++;
 	}
-	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
 
 	j = 0;
-	for (auto i = first; i != last; ++i) {
+		for (auto i = first; i != last; ++i) {
 		(*i)->SetParticlePositions(*i, ParticlePropsOut[j]);
 		j++;
 	}
-
+	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
 };
 
 void FluidPhysics::ComputeForces() {
+	ForcecomputeShader->Bind();
+	ForcecomputeShader->Execute(7200/32, 1, 1);
+	ForcecomputeShader->Unbind();
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 };
 void FluidPhysics::ComputeDensity() {
+	DensitycomputeShader->Bind();
+	DensitycomputeShader->Execute(7200/32, 1, 1);
+	DensitycomputeShader->Unbind();
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
 };
+
 void FluidPhysics::ClearFluids() {
 }
 

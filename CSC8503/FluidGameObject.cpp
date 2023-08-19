@@ -36,7 +36,21 @@ ParticleProperties* FluidGameObject::AddParticleToStruct( FluidGameObject* Parti
 	ParticleProps->particleProperties.y = position.y;
 	ParticleProps->particleProperties.z = position.z;
 	ParticleProps->particleProperties.empty = 0;
-	
+
+	ParticleProps->particleProperties.velocityx = 0;
+	ParticleProps->particleProperties.velocityy = 0;
+	ParticleProps->particleProperties.velocityz = 0;
+	ParticleProps->particleProperties.vempty = 0;
+
+	ParticleProps->particleProperties.forcex = 0;
+	ParticleProps->particleProperties.forcey = 0;
+	ParticleProps->particleProperties.forcez = 0;
+	ParticleProps->particleProperties.fempty = 0;
+
+	ParticleProps->particleProperties.density = 0;
+	ParticleProps->particleProperties.dempty = 0;
+	ParticleProps->particleProperties.pressure = 0;
+	ParticleProps->particleProperties.pempty = 0;
 	return &ParticleProps->particleProperties;
 
 	
