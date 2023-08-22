@@ -10,8 +10,8 @@
 
 #define PARTICLE_DENSITY_START 1000
 
-#define PARTICLE_MASS 1000
-#define SMOOTHING_LENGTH (6 * PARTICLE_RADIUS)
+#define PARTICLE_MASS 10
+#define SMOOTHING_LENGTH (11 * PARTICLE_RADIUS)
 
 #define PARTICLE_STIFFNESS 1000
 // For calculations
@@ -21,26 +21,29 @@ layout (local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
 
 struct Particle
 {
- 	        float x; //position
+ 	   float x; //position
 			float y;
 			float z;
-			float empty;
+			
 			
 			float velocityx;//velocity
 			float velocityy;
 			float velocityz;
-			float vempty;
-			
+		
 			float forcex;//force
 			float forcey;
 			float forcez;
-			float fempty;
+			
 			
 			float density;//density
 			float dempty;
 			
 			float pressure;//presure
-			float pempty;
+			float pempty; //llambda
+
+			float correction_forcex;
+			float correction_forcey;
+			float correction_forcez;
     
 };
 
@@ -60,18 +63,20 @@ void main()
     float r = 0.0f;
     // compute density
      float density_sum = 0.0f;
-     vec4 delta = vec4(0,0,0,0);
+     vec3 delta = vec3(0,0,0);
     for (int j = 0; j < NUM_PARTICLES; j++)
     {
-        delta = vec4(particles[i].x,particles[i].y,particles[i].z,0)-vec4(particles[j].x, particles[j].y, particles[j].z,0);
+        delta = vec3(particles[j].x,particles[j].y,particles[j].z)-vec3(particles[i].x, particles[i].y, particles[i].z);
          r = length(delta);
         if (r < SMOOTHING_LENGTH)
         {
-            density_sum += PARTICLE_MASS * 315.f * pow(SMOOTHING_LENGTH * SMOOTHING_LENGTH - r * r, 3) / (64.f * PI * pow(SMOOTHING_LENGTH, 9));
+            density_sum += (PARTICLE_MASS * 315.f *
+             pow(SMOOTHING_LENGTH * SMOOTHING_LENGTH - r * r, 3)) 
+             / (64.f * PI * pow(SMOOTHING_LENGTH, 9));
         }
     }
 
-if(density_sum>5000){density_sum=5000; };
+if(density_sum==0){density_sum=1001; };
     particles[i].density = density_sum;
     // compute pressure
     particles[i].pressure = max(PARTICLE_STIFFNESS * (density_sum - PARTICLE_DENSITY_START), 0.f);

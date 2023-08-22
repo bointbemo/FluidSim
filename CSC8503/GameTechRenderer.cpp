@@ -343,6 +343,7 @@ void GameTechRenderer::RenderCamera() {
 			DrawBoundMesh(i);
 		}
 	}
+	
 	for (const auto& i : particleObjects) {
 		OGLShader* shader = (OGLShader*)(*i).GetShader();
 		BindShader(shader);
@@ -398,6 +399,7 @@ void GameTechRenderer::RenderCamera() {
 		for (int i = 0; i < layerCount; ++i) {
 			DrawBoundMesh(i);
 		}
+		
 	}
 }
 

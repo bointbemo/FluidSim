@@ -34,6 +34,7 @@ namespace NCL {
 			void ClearFluids();
 			void ComputeForces();
 			void ComputeDensity();
+			void ComputeConstraints();
 			std::set < CollisionDetection::FluidCollisionInfo > Neighbourhood;
 			GameWorld& gameWorld;
 			GLuint ssbo;
@@ -46,6 +47,7 @@ namespace NCL {
 			OGLComputeShader* PositioncomputeShader;
 			OGLComputeShader* ForcecomputeShader;
 			OGLComputeShader* DensitycomputeShader;
+			OGLComputeShader* ConstraintcomputeShader;
 			float	dTOffset;
 			
 		};

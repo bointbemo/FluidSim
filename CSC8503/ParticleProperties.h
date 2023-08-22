@@ -11,24 +11,31 @@ namespace NCL {
 			float x; //position
 			float y;
 			float z;
-			float empty;
+			
 			
 			float velocityx;//velocity
 			float velocityy;
 			float velocityz;
-			float vempty;
-			
+		
 			float forcex;//force
 			float forcey;
 			float forcez;
-			float fempty;
+			
 			
 			float density;//density
 			float dempty;
 			
 			float pressure;//presure
-			float pempty;
+			float pempty; //llambda
 
+			float correction_forcex;
+			float correction_forcey;
+			float correction_forcez;
+
+			//float correction_forcex; // correction force for density/ viscosity contraints
+			//float correction_forcey;
+			//float correction_forcez;
+			//float correction_forceempty;
 		};
 	};
 };
