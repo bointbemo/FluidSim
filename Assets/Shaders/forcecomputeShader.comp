@@ -9,12 +9,12 @@
 #define PI 3.1415927410125732421875f
 
 #define PARTICLE_DENSITY_START 1000
-#define PARTICLE_VISCOSITY 100
-#define PARTICLE_MASS 10
-#define SMOOTHING_LENGTH (11 * PARTICLE_RADIUS)
+#define PARTICLE_VISCOSITY 3.5
+#define PARTICLE_MASS 0.7
+#define SMOOTHING_LENGTH (0.158460189)
 #define GRAVITY vec4(0, -9.81,0,0)
 
-#define PARTICLE_STIFFNESS 2000
+#define PARTICLE_STIFFNESS 3
 // For calculations
 
 
@@ -52,6 +52,10 @@ layout(std430, binding = 1) buffer PARTICLES
 {
 Particle particles[];
 };
+layout(std430, binding = 2) buffer SOLIDS
+{
+Particle solids[];
+};
 
 
 
@@ -68,10 +72,19 @@ void main()
     vec3 correction_pressure_force = vec3(0, 0,0);
     vec3 correction_viscosity_force = vec3(0, 0,0);
      vec3 delta = vec3(0,0,0);
+     vec3 normal = vec3(0,0,0);
+     vec3 localParticlej = vec3(0,0,0);
+     vec3 localParticlei = vec3(0,0,0);
+     vec3 particlejVelocity = vec3(0,0,0);
+     vec3 particleiVelocity = vec3(0,0,0);
+     vec3 contactVelocity = vec3(0,0,0);
+     vec3 impulseVelocity =  vec3(0,0,0);
+     vec3 fullimpulseVelocity = vec3(0,0,0);
      vec4 external_force = vec4(0,0,0,0);
      float r = 0.0f;
      int considered_particles = 0;
-     
+     int considered_particles1 = 0;
+    
     for ( int j = 0; j < NUM_PARTICLES; j++)
     {
         if(particles[j].density==0){particles[j].density = 1000;};
@@ -86,17 +99,35 @@ void main()
         delta = positionj-positioni;
          r = length(delta);
         if(r<PARTICLE_RADIUS){//collision corrections, if particle j within radius of i repel out as fluid is incompressable
-            particles[j].x = particles[j].x + PARTICLE_RADIUS;
-            particles[j].y = particles[j].y + PARTICLE_RADIUS;
-           particles[j].z = particles[j].z + PARTICLE_RADIUS;
-            positionj = vec3(particles[j].x, particles[j].y, particles[j].z);
-           if(r == 0){r = 0.01;};
-            particles[j].velocityx =  -particles[j].velocityx *  (PARTICLE_RADIUS/r);
-            particles[j].velocityy = -particles[j].velocityy* (PARTICLE_RADIUS/r);
-            particles[j].velocityz =  -particles[j].velocityz* (PARTICLE_RADIUS/r);
+            //particles[j].x = particles[j].x + PARTICLE_RADIUS;
+            //particles[j].y = particles[j].y + PARTICLE_RADIUS;
+           //particles[j].z = particles[j].z + PARTICLE_RADIUS;#
+           if(considered_particles1<10){
+           localParticlej = normal * PARTICLE_RADIUS;
+localParticlei = -normal * PARTICLE_RADIUS;
+particleiVelocity = vec3(particles[i].velocityx,particles[i].velocityy,particles[i].velocityz);
+particlejVelocity = vec3(particles[j].velocityx,particles[j].velocityy,particles[j].velocityz);
+contactVelocity = particleiVelocity - particlejVelocity;
+impulseVelocity = -vec3(particles[i].velocityx*particles[j].velocityx,particles[i].velocityy*particles[j].velocityy,particles[i].velocityz*particles[j].velocityz)/PARTICLE_MASS*2;
+fullimpulseVelocity = impulseVelocity*normal;
+ if(r == 0){r = 0.01;};
+ particles[i].velocityx = - particles[j].velocityx  -fullimpulseVelocity.x  * (r/PARTICLE_RADIUS) *0.01;
+particles[i].velocityy = -particles[j].velocityy  -fullimpulseVelocity.y  *  (r/PARTICLE_RADIUS) *0.01;
+particles[i].velocityz = -particles[j].velocityz  -fullimpulseVelocity.z * (r/PARTICLE_RADIUS) *0.01;
+particles[j].velocityx =  particles[j].velocityx + fullimpulseVelocity.x *(r/PARTICLE_RADIUS) *0.01;
+particles[j].velocityy = particles[j].velocityy + fullimpulseVelocity.y  *(r/PARTICLE_RADIUS) *0.01;
+particles[j].velocityz = particles[j].velocityz + fullimpulseVelocity.z * (r/PARTICLE_RADIUS) *0.01;
+           normal = vec3(delta.x/r,delta.y/r,delta.z/r);
+           
+          
+            //particles[j].velocityx =  -particles[j].velocityx * (r/PARTICLE_RADIUS);
+           // particles[j].velocityy = -particles[j].velocityy* (r/PARTICLE_RADIUS);
+           // particles[j].velocityz =  -particles[j].velocityz* (r/PARTICLE_RADIUS);
 
-            delta = positionj-positioni;
-            r = length(delta);
+            //delta = positionj-positioni;
+            //r = length(delta);
+            considered_particles1++;
+           }
 
         }
         

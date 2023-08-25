@@ -3,10 +3,10 @@
 #define WORK_GROUP_SIZE 7200
 #define NUM_PARTICLES 7200
 #define PARTICLE_RADIUS 0.1
-#define PARTICLE_MASS = 10
+#define PARTICLE_MASS = 0.7
 // For calculations
 #define PI 3.141592741f
-#define SMOOTHING_LENGTH (11 * PARTICLE_RADIUS)
+#define SMOOTHING_LENGTH (0.158460189)
 #define relaxation_factor 10f
 #define TIME_STEP 0.001f
 #define WALL_DAMPING 0.3f

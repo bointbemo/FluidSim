@@ -10,6 +10,7 @@
 #include "Window.h"
 #include <functional>
 #include <algorithm>
+#include "PhysicsObject.h"
 using namespace NCL;
 using namespace Rendering;
 using namespace CSC8503;
@@ -25,10 +26,14 @@ FluidPhysics::FluidPhysics(GameWorld& world) : OGLRenderer(*Window::GetWindow())
 	ForcecomputeShader = new OGLComputeShader("forcecomputeShader.comp");
 	DensitycomputeShader = new OGLComputeShader("densitycomputeShader.comp");
 	ConstraintcomputeShader = new OGLComputeShader("correctioncomputeShader.comp");
+	SolidCollisioncomputeShader = new OGLComputeShader("solidcomputeShader.comp");
 	GLvoid* p;
 	float	dTOffset = 0;
 	glGenBuffers(1, &ssbo);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+	
+	glGenBuffers(1, &ssbo);
+	
+
 	
 	
 
@@ -47,7 +52,7 @@ void FluidPhysics::Update(float dt) {
 	t.GetTimeDeltaSeconds(); 
 	
 	int iteratorCount = 0;
-	dTOffset += dt; //We accumulate time delta here - there might be remainders from previous frame!
+	//dTOffset += dt; //We accumulate time delta here - there might be remainders from previous frame!
 	//ClearFluids();
 	UpdateParticlePositions();
 	//if (dTOffset / realdt > 120) {
@@ -56,6 +61,7 @@ void FluidPhysics::Update(float dt) {
 		ComputeDensity();
 		
 		ComputeForces();
+		ComputeSolids();
 
 	//}
 		
@@ -117,18 +123,21 @@ void FluidPhysics::FluidCollision() {
 
 };
 void FluidPhysics::UpdateParticlePositions() {
+	std::vector<GameObject*>::const_iterator firstsolid;
+	std::vector<GameObject*>::const_iterator lastsolid;
 	
 	std::vector<FluidGameObject*>::const_iterator first;
 	std::vector<FluidGameObject*>::const_iterator last;
 	ParticleProperties ParticlePropslocal[7200];
 	ParticleProperties ParticlePropsOut[7200];
+	ParticleProperties ParticlePropsSolids[3];
 	int* size = new int;
 	gameWorld.GetFluidObjectIterators(first, last);
+	gameWorld.GetObjectIterators(firstsolid, lastsolid);
 	int j = 0;
 	if (initial == false) {
 		for (auto i = first; i != last; ++i) {
-			/*ParticlePropslocal[j].density = (*i)->AddParticleToStruct(*i, j)->density;
-			/*ParticlePropslocal[j].mass = (*i)->AddParticleToStruct(*i, j)->mass;*/
+			
 			ParticlePropslocal[j].x = (*i)->AddParticleToStruct(*i, j)->x;
 			ParticlePropslocal[j].y = (*i)->AddParticleToStruct(*i, j)->y;
 			ParticlePropslocal[j].z = (*i)->AddParticleToStruct(*i, j)->z;
@@ -151,12 +160,50 @@ void FluidPhysics::UpdateParticlePositions() {
 
 			j++;
 		}
+		j = 0;
+		for (auto i = firstsolid; i != lastsolid; ++i) {
+			int volumeType;
+			ParticlePropsSolids[j].x = (*i)->GetTransform().GetPosition().x;
+			ParticlePropsSolids[j].y = (*i)->GetTransform().GetPosition().y;
+			ParticlePropsSolids[j].z = (*i)->GetTransform().GetPosition().z;
+			ParticlePropsSolids[j].correction_forcex = 0;
 
+			if ((*i)->GetBoundingVolume()->type == VolumeType::AABB) { volumeType = 1; };
+			if ((*i)->GetBoundingVolume()->type == VolumeType::OBB) { volumeType = 2; };
+			if ((*i)->GetBoundingVolume()->type == VolumeType::Sphere) { volumeType = 4; };
+			if ((*i)->GetBoundingVolume()->type == VolumeType::Mesh) { volumeType = 8; };
+			if ((*i)->GetBoundingVolume()->type == VolumeType::Capsule) { volumeType = 16; };
+			
+			
 
+		    ParticlePropsSolids[j].velocityx = (*i)->GetPhysicsObject()->GetLinearVelocity().x;
+			ParticlePropsSolids[j].velocityy = (*i)->GetPhysicsObject()->GetLinearVelocity().y;
+			ParticlePropsSolids[j].velocityz = (*i)->GetPhysicsObject()->GetLinearVelocity().z;
+			ParticlePropsSolids[j].correction_forcey = volumeType;
+			
+			ParticlePropsSolids[j].forcex = (*i)->GetTransform().GetScale().x;
+			ParticlePropsSolids[j].forcey = (*i)->GetTransform().GetScale().y;
+			ParticlePropsSolids[j].forcez = (*i)->GetTransform().GetScale().z;
+			ParticlePropsSolids[j].correction_forcez = 0;
+		
+
+			ParticlePropsSolids[j].density = 0;
+			ParticlePropsSolids[j].dempty = 1/(*i)->GetPhysicsObject()->GetInverseMass();;
+			ParticlePropsSolids[j].pressure = 0;
+			ParticlePropsSolids[j].pempty = 0;
+			j++;
+
+		}
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
 		//glBufferStorage(GL_SHADER_STORAGE_BUFFER, sizeof(ParticlePropslocal), &ParticlePropslocal[0], GL_CLIENT_STORAGE_BIT | GL_MAP_READ_BIT );
 		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(ParticlePropslocal), &ParticlePropslocal[0], GL_DYNAMIC_COPY);
-
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, solidsssbo);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(ParticlePropsSolids), &ParticlePropsSolids[0], GL_DYNAMIC_COPY);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, solidsssbo);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+		
 		initial = true;
 	}
 
@@ -228,6 +275,13 @@ void FluidPhysics::ComputeConstraints() {
  ConstraintcomputeShader->Bind();
  ConstraintcomputeShader->Execute(PARTICLENUMBERS /32, 1, 1);
  ConstraintcomputeShader->Unbind();
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+};
+void FluidPhysics::ComputeSolids() {
+	SolidCollisioncomputeShader->Bind();
+	SolidCollisioncomputeShader->Execute(PARTICLENUMBERS / 32, 1, 1);
+	SolidCollisioncomputeShader->Unbind();
 	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
 };

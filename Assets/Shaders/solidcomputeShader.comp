@@ -1,0 +1,128 @@
+#version 440
+
+#define WORK_GROUP_SIZE 7200
+#define NUM_PARTICLES 7200
+#define PARTICLE_RADIUS 0.1
+// constants
+
+
+#define PI 3.1415927410125732421875f
+
+#define PARTICLE_DENSITY_START 1000
+
+#define PARTICLE_MASS 0.7
+#define SMOOTHING_LENGTH (0.158460189)
+
+#define PARTICLE_STIFFNESS 1000
+// For calculations
+
+
+layout (local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
+
+struct Particle
+{
+ 	   float x; //position
+			float y;
+			float z;
+			
+			
+			float velocityx;// dimensions
+			float velocityy;
+			float velocityz;
+		
+			float forcex;//NA
+			float forcey;
+			float forcez;
+			
+			
+			float density;//NA
+			float dempty;
+			
+			float pressure;//NA
+			float pempty; //NA
+
+			float correction_forcex;//volume number 
+			float correction_forcey;
+			float correction_forcez;
+    
+};
+
+layout(std430, binding = 1) buffer PARTICLES
+{
+Particle particles[];
+};
+layout(std430, binding = 2) buffer SOLIDS
+{
+Particle solid[];
+};
+
+
+
+
+const float GAS_CONST = 2000.0f; // const for equation of state
+
+void main()
+{
+
+     uint i = gl_GlobalInvocationID.x;
+    float r = 0.0f;
+    // compute density
+     float density_sum = 0.0f;
+     vec3 delta = vec3(0,0,0);
+     vec3 normal = vec3(0,0,0);
+     vec3 localParticle = vec3(0,0,0);
+     vec3 localSolid = vec3(0,0,0);
+     vec3 particleVelocity = vec3(0,0,0);
+     vec3 solidVelocity = vec3(0,0,0);
+     vec3 contactVelocity = vec3(0,0,0);
+     vec3 impulseVelocity =  vec3(0,0,0);
+     vec3 fullimpulseVelocity = vec3(0,0,0);
+    for (int j = 0; j < NUM_PARTICLES; j++)
+    {
+        for(int k = 0; k < 2;k++)
+        {
+            
+delta = vec3(solid[k].x,solid[k].y,solid[k].z) - vec3(particles[j].x,particles[j].y,particles[j].z);
+r= length(delta);
+normal = vec3(delta.x/r,delta.y/r,delta.z/r);
+
+        
+if(solid[k].correction_forcey == 1)
+{
+return;
+}
+if(solid[k].correction_forcey == 2)
+{
+    return;
+}
+if(solid[k].correction_forcey == 4)
+{
+    if(r<solid[k].forcex){
+localParticle = normal * PARTICLE_RADIUS;
+localSolid = -normal * solid[k].velocityx;
+particleVelocity = vec3(particles[i].velocityx,particles[i].velocityy,particles[i].velocityz);
+solidVelocity = vec3(solid[k].velocityx,solid[k].velocityy,solid[k].velocityz);
+contactVelocity = particleVelocity - solidVelocity;
+impulseVelocity = -vec3(particles[i].velocityx*solid[k].velocityx,particles[i].velocityy*solid[k].velocityy,particles[i].velocityz*solid[k].velocityz)/solid[k].dempty;
+fullimpulseVelocity = impulseVelocity*normal;
+particles[j].velocityx = particles[j].velocityx + fullimpulseVelocity.x;
+particles[j].velocityy = particles[j].velocityy + fullimpulseVelocity.y;
+particles[j].velocityz = particles[j].velocityx + fullimpulseVelocity.z;
+    }
+
+}
+if(solid[k].correction_forcey == 8)
+{
+    return;
+}
+if(solid[k].correction_forcey == 16)
+{
+    return;
+}
+        
+        }
+        
+    }
+
+
+}

@@ -8,7 +8,7 @@
 #define PI 3.141592741f
 
 
-#define TIME_STEP 0.001f
+#define TIME_STEP 0.01f
 #define WALL_DAMPING 0.3f
 layout (local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
 
@@ -52,7 +52,7 @@ const float GAS_CONST = 2.0f; // const for equation of state
 void main()
 {
     uint i = gl_GlobalInvocationID.x;
-int boundary = 5;
+int boundary = 10;
 vec4 posshift = vec4(0,0,0,0);
     // integrate
     if(particles[i].density < 0.01){particles[i].density = 100;};
@@ -60,7 +60,9 @@ vec4 posshift = vec4(0,0,0,0);
   
 
     vec4 acceleration = vec4(particles[i].forcex,particles[i].forcey,particles[i].forcez,0) / particles[i].density ;
-    vec4 new_velocity = vec4(particles[i].velocityx,particles[i].velocityy,particles[i].velocityz,0)+ TIME_STEP * acceleration;
+
+    vec4 new_velocity = ((vec4(particles[i].velocityx,particles[i].velocityy,particles[i].velocityz,0)+ (TIME_STEP+TIME_STEP/2) * acceleration) + 
+    (vec4(particles[i].velocityx,particles[i].velocityy,particles[i].velocityz,0)+ (TIME_STEP-TIME_STEP/2 * acceleration)))/2;
 
      if(new_velocity.x>2000 ){new_velocity.x = 2000;};
     if(new_velocity.x<-2000){new_velocity.x = -2000;};
@@ -90,20 +92,51 @@ vec4 posshift = vec4(0,0,0,0);
 
     {
     // boundary conditions
-    if (new_position.x < -boundary)
+   /*   if (new_position.x < -8) //-boundary)
+    {
+        new_position.x = -8; //-boundary;
+        new_velocity.x *= -1 *WALL_DAMPING;
+    }
+    else if (new_position.x >  -3)// boundary)
+    {
+        new_position.x = -3; //boundary;
+        new_velocity.x *= -1 *WALL_DAMPING;
+    }
+     if (new_position.y < -8) //-boundary)
+    {
+        new_position.y = -8 ;//-boundary;
+        new_velocity.y *= -1* 0.01;
+    }
+    else if (new_position.y >-3) //boundary)
+    {
+        new_position.y = -3;//boundary;
+        new_velocity.y *= -1 * WALL_DAMPING;
+    }
+       if (new_position.z < -8 )//-boundary)
+    {
+        new_position.z = -8 ;//-boundary;
+        new_velocity.z *= -1 * WALL_DAMPING;
+    }
+    else if (new_position.z > -3) // boundary)
+    {
+        new_position.z = -3 ;//boundary;
+        new_velocity.z *= -1 * WALL_DAMPING;
+    }  */
+      if (new_position.x < -boundary)
     {
         new_position.x = -boundary;
         new_velocity.x *= -1 *WALL_DAMPING;
     }
+
     else if (new_position.x > boundary)
     {
         new_position.x = boundary;
         new_velocity.x *= -1 *WALL_DAMPING;
     }
-     if (new_position.y < -boundary)
+     if (new_position.y <-boundary)
     {
         new_position.y = -boundary;
-        new_velocity.y *= -1* WALL_DAMPING;
+        new_velocity.y *= -1* 0.01;
     }
     else if (new_position.y >boundary)
     {
@@ -115,11 +148,12 @@ vec4 posshift = vec4(0,0,0,0);
         new_position.z = -boundary;
         new_velocity.z *= -1 * WALL_DAMPING;
     }
-    else if (new_position.z > boundary)
+    else if (new_position.z >  boundary)
     {
         new_position.z = boundary;
         new_velocity.z *= -1 * WALL_DAMPING;
-    }
+    } 
+
 
 
     particles[i].velocityx = new_velocity.x;

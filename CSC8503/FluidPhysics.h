@@ -35,9 +35,12 @@ namespace NCL {
 			void ComputeForces();
 			void ComputeDensity();
 			void ComputeConstraints();
+			void ComputeSolids();
 			std::set < CollisionDetection::FluidCollisionInfo > Neighbourhood;
 			GameWorld& gameWorld;
 			GLuint ssbo;
+			GLuint solidsssbo;
+
 			GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
 			GLvoid* p;
 			// data input
@@ -48,6 +51,7 @@ namespace NCL {
 			OGLComputeShader* ForcecomputeShader;
 			OGLComputeShader* DensitycomputeShader;
 			OGLComputeShader* ConstraintcomputeShader;
+			OGLComputeShader* SolidCollisioncomputeShader;
 			float	dTOffset;
 			
 		};
