@@ -99,7 +99,7 @@ vec4 new_position= vec4(0,0,0,0);
 
     
     // boundary conditions
-       if (new_position.x < -8) //-boundary)
+      if (new_position.x < -8) //-boundary)
     {
         new_position.x = -8; //-boundary;
         new_velocity.x *= -1 *WALL_DAMPING;
@@ -128,8 +128,8 @@ vec4 new_position= vec4(0,0,0,0);
     {
         new_position.z = -3 ;//boundary;
         new_velocity.z *= -1 * WALL_DAMPING;
-    }    /*
-      if (new_position.x < -boundary)
+    }    
+/*       if (new_position.x < -boundary)
     {
         new_position.x = -boundary;
         new_velocity.x *= -1 *WALL_DAMPING;
@@ -159,7 +159,7 @@ vec4 new_position= vec4(0,0,0,0);
     {
         new_position.z = boundary;
         new_velocity.z *= -1 * WALL_DAMPING;
-    }    */
+    }     */
 
 
 

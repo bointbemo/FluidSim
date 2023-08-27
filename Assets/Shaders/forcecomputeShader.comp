@@ -9,9 +9,9 @@
 #define PI 3.1415927410125732421875f
 
 #define PARTICLE_DENSITY_START 1000
-#define PARTICLE_VISCOSITY 3.5
+#define PARTICLE_VISCOSITY 10
 #define PARTICLE_MASS 0.7
-#define SMOOTHING_LENGTH (0.158460189)
+#define SMOOTHING_LENGTH (0.158460189*6.8)
 #define GRAVITY vec4(0, -9.81,0,0)
 
 #define PARTICLE_STIFFNESS 3
@@ -115,9 +115,9 @@ contactVelocity = particleiVelocity - particlejVelocity;
 impulseVelocity = (contactVelocity.x * normal.x + contactVelocity.y * normal.y + contactVelocity.z* normal.z)/PARTICLE_MASS;
 fullimpulseVelocity = normal*impulseVelocity;
  if(r == 0){r = 0.01;};
- particles[i].velocityx =  particles[i].velocityx  +fullimpulseVelocity.x  * ((PARTICLE_RADIUS-r)/PARTICLE_RADIUS)*0.5;
-particles[i].velocityy = particles[i].velocityy  + fullimpulseVelocity.y  *  ((PARTICLE_RADIUS-r)/PARTICLE_RADIUS) *0.5;
-particles[i].velocityz = particles[i].velocityz  + fullimpulseVelocity.z * (PARTICLE_RADIUS-r/PARTICLE_RADIUS) *0.5;
+ particles[i].velocityx =  particles[i].velocityx  +fullimpulseVelocity.x  * ((PARTICLE_RADIUS-r)/PARTICLE_RADIUS);
+particles[i].velocityy = particles[i].velocityy  + fullimpulseVelocity.y  *  ((PARTICLE_RADIUS-r)/PARTICLE_RADIUS) ;
+particles[i].velocityz = particles[i].velocityz  + fullimpulseVelocity.z * (PARTICLE_RADIUS-r/PARTICLE_RADIUS) ;
 /* particles[j].velocityx =  particles[j].velocityx + fullimpulseVelocity.x *(r/PARTICLE_RADIUS) *0.001;
 particles[j].velocityy = particles[j].velocityy + fullimpulseVelocity.y  *(r/PARTICLE_RADIUS) ;
 particles[j].velocityz = particles[j].velocityz + fullimpulseVelocity.z * (r/PARTICLE_RADIUS) *0.001; */
@@ -169,7 +169,7 @@ particles[j].velocityz = particles[j].velocityz + fullimpulseVelocity.z * (r/PAR
         }
          considered_particles++;
 
-            if(considered_particles == 20){continue;}; 
+            if(considered_particles == 50){continue;}; 
     }
          
 if(considered_particles<20){

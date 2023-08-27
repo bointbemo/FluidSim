@@ -6,7 +6,7 @@
 #define PARTICLE_MASS = 0.7
 // For calculations
 #define PI 3.141592741f
-#define SMOOTHING_LENGTH (0.158460189)
+#define SMOOTHING_LENGTH (0.158460189*6.8)
 #define relaxation_factor 1.0f
 #define TIME_STEP 0.001f
 #define WALL_DAMPING 0.3f

@@ -11,7 +11,7 @@
 #define PARTICLE_DENSITY_START 1000
 
 #define PARTICLE_MASS 0.7
-#define SMOOTHING_LENGTH (0.158460189)
+#define SMOOTHING_LENGTH (0.158460189*6.8)
 
 #define PARTICLE_STIFFNESS 1000
 // For calculations
@@ -79,5 +79,5 @@ void main()
 if(density_sum==0){density_sum=1000; };
     particles[i].density = density_sum;
     // compute pressure
-    particles[i].pressure = PARTICLE_STIFFNESS * (density_sum - PARTICLE_DENSITY_START);
+    particles[i].pressure = max(PARTICLE_STIFFNESS * (density_sum - PARTICLE_DENSITY_START),0);
 }

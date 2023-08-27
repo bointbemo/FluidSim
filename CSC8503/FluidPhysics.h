@@ -26,10 +26,7 @@ namespace NCL {
 		
 			ParticleProperties ParticlePropsGlobal[9];
 		protected:
-			/*void AddParticleToStruct(FluidGameObject particle, int PARTICLEINDEX);*/
-			void NearestNeighbour();
-			void SetNeighbourhoodLists();
-			void FluidCollision();
+
 			void UpdateParticlePositions();
 			void ClearFluids();
 			void ComputeForces();
