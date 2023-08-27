@@ -69,6 +69,7 @@ void main()
     // compute all forces
     vec3 pressure_force = vec3(0, 0,0);
     vec3 viscosity_force = vec3(0, 0,0);
+    vec3 surface_force = vec3(0,0,0);
     vec3 correction_pressure_force = vec3(0, 0,0);
     vec3 correction_viscosity_force = vec3(0, 0,0);
      vec3 delta = vec3(0,0,0);
@@ -78,13 +79,15 @@ void main()
      vec3 particlejVelocity = vec3(0,0,0);
      vec3 particleiVelocity = vec3(0,0,0);
      vec3 contactVelocity = vec3(0,0,0);
-     vec3 impulseVelocity =  vec3(0,0,0);
+     float impulseVelocity =  0;
      vec3 fullimpulseVelocity = vec3(0,0,0);
      vec4 external_force = vec4(0,0,0,0);
      float r = 0.0f;
      int considered_particles = 0;
      int considered_particles1 = 0;
-    
+     float modgradient = 0;
+     vec3 gradient = vec3(0,0,0);
+   
     for ( int j = 0; j < NUM_PARTICLES; j++)
     {
         if(particles[j].density==0){particles[j].density = 1000;};
@@ -103,21 +106,22 @@ void main()
             //particles[j].y = particles[j].y + PARTICLE_RADIUS;
            //particles[j].z = particles[j].z + PARTICLE_RADIUS;#
            if(considered_particles1<10){
+            normal = normalize(vec3(delta.x,delta.y,delta.z));
            localParticlej = normal * PARTICLE_RADIUS;
 localParticlei = -normal * PARTICLE_RADIUS;
 particleiVelocity = vec3(particles[i].velocityx,particles[i].velocityy,particles[i].velocityz);
 particlejVelocity = vec3(particles[j].velocityx,particles[j].velocityy,particles[j].velocityz);
 contactVelocity = particleiVelocity - particlejVelocity;
-impulseVelocity = -vec3(particles[i].velocityx*particles[j].velocityx,particles[i].velocityy*particles[j].velocityy,particles[i].velocityz*particles[j].velocityz)/PARTICLE_MASS*2;
-fullimpulseVelocity = impulseVelocity*normal;
+impulseVelocity = (contactVelocity.x * normal.x + contactVelocity.y * normal.y + contactVelocity.z* normal.z)/PARTICLE_MASS;
+fullimpulseVelocity = normal*impulseVelocity;
  if(r == 0){r = 0.01;};
- particles[i].velocityx = - particles[j].velocityx  -fullimpulseVelocity.x  * (r/PARTICLE_RADIUS) *0.01;
-particles[i].velocityy = -particles[j].velocityy  -fullimpulseVelocity.y  *  (r/PARTICLE_RADIUS) *0.01;
-particles[i].velocityz = -particles[j].velocityz  -fullimpulseVelocity.z * (r/PARTICLE_RADIUS) *0.01;
-particles[j].velocityx =  particles[j].velocityx + fullimpulseVelocity.x *(r/PARTICLE_RADIUS) *0.01;
-particles[j].velocityy = particles[j].velocityy + fullimpulseVelocity.y  *(r/PARTICLE_RADIUS) *0.01;
-particles[j].velocityz = particles[j].velocityz + fullimpulseVelocity.z * (r/PARTICLE_RADIUS) *0.01;
-           normal = vec3(delta.x/r,delta.y/r,delta.z/r);
+ particles[i].velocityx =  particles[i].velocityx  +fullimpulseVelocity.x  * ((PARTICLE_RADIUS-r)/PARTICLE_RADIUS)*0.5;
+particles[i].velocityy = particles[i].velocityy  + fullimpulseVelocity.y  *  ((PARTICLE_RADIUS-r)/PARTICLE_RADIUS) *0.5;
+particles[i].velocityz = particles[i].velocityz  + fullimpulseVelocity.z * (PARTICLE_RADIUS-r/PARTICLE_RADIUS) *0.5;
+/* particles[j].velocityx =  particles[j].velocityx + fullimpulseVelocity.x *(r/PARTICLE_RADIUS) *0.001;
+particles[j].velocityy = particles[j].velocityy + fullimpulseVelocity.y  *(r/PARTICLE_RADIUS) ;
+particles[j].velocityz = particles[j].velocityz + fullimpulseVelocity.z * (r/PARTICLE_RADIUS) *0.001; */
+           
            
           
             //particles[j].velocityx =  -particles[j].velocityx * (r/PARTICLE_RADIUS);
@@ -125,8 +129,7 @@ particles[j].velocityz = particles[j].velocityz + fullimpulseVelocity.z * (r/PAR
            // particles[j].velocityz =  -particles[j].velocityz* (r/PARTICLE_RADIUS);
 
             //delta = positionj-positioni;
-            //r = length(delta);
-            considered_particles1++;
+            //r = length(delta); 
            }
 
         }
@@ -134,22 +137,22 @@ particles[j].velocityz = particles[j].velocityz + fullimpulseVelocity.z * (r/PAR
         if (r < SMOOTHING_LENGTH)
         {
             if(particles[j].density==0){particles[j].density=1000;};
-            if(particles[i].pressure == 0)
-            pressure_force -= PARTICLE_MASS * 
-            ((positionj - positioni)/ r) *
-            ((particles[i].pressure + particles[j].pressure) / pow((particles[j].density),2)) *
+            
+            pressure_force += PARTICLE_MASS * 
+            ((positioni - positionj)/r) *
+            ((particles[i].pressure / (particles[i].density*2) + particles[j].pressure/ (particles[j].density*2)))*
             // gradient of spiky kernel from muller et al 2003
                  ((15/(PI*pow(SMOOTHING_LENGTH,6)) *pow(SMOOTHING_LENGTH-r, 3))) ;
             
             if(pow(r,2)>0){
-            viscosity_force += PARTICLE_MASS * 
-            (vec3(particles[j].velocityx,particles[j].velocityy,particles[j].velocityz) - vec3(particles[i].velocityx,particles[i].velocityy,particles[i].velocityz)) 
-            / particles[j].density *
+            viscosity_force += PARTICLE_VISCOSITY*PARTICLE_MASS * 
+            ((vec3(particles[j].velocityx,particles[j].velocityy,particles[j].velocityz) - vec3(particles[i].velocityx,particles[i].velocityy,particles[i].velocityz)) 
+            / particles[j].density )*
             // Laplacian of viscosity kernel from muller et al 2003
-                45.f / (PI * pow(SMOOTHING_LENGTH, 6)) * (SMOOTHING_LENGTH - r);
+                (45.f / (PI * pow(SMOOTHING_LENGTH, 6)) * (SMOOTHING_LENGTH - r));
             }
                  correction_pressure_force -= (particles[i].pempty+particles[j].pempty)*PARTICLE_MASS *
-                 (positionj - positioni) *
+                 ((positionj - positioni)/r) *
                   (particles[i].pressure + particles[j].pressure) 
                   / pow(( particles[j].density),2) *
             // gradient of spiky kernel from muller et al 2003
@@ -162,18 +165,44 @@ particles[j].velocityz = particles[j].velocityz + fullimpulseVelocity.z * (r/PAR
                 
             }
            
-            considered_particles++;
-
-             if(considered_particles == 12){continue;};
+           
         }
+         considered_particles++;
+
+            if(considered_particles == 20){continue;}; 
     }
+         
+if(considered_particles<20){
+    
+for ( int j = 0; j < NUM_PARTICLES; j++){
+                
+  vec3 positioni = vec3(particles[i].x,particles[i].y,particles[i].z);
+  vec3 positionj = vec3(particles[j].x, particles[j].y, particles[j].z);
+  delta = positioni-positionj;
+  r = length(delta);
+   if(r<SMOOTHING_LENGTH){
+    if(particles[j].pressure == 0){particles[j].pressure = 1;}
+                normal += normalize((positionj - positioni)) * -(945/(32*PI)*(pow(SMOOTHING_LENGTH,9)))*(pow(SMOOTHING_LENGTH,2)-pow(r,2));
+                gradient += -(PARTICLE_MASS/particles[j].density)*(945/(32*PI)*(pow(SMOOTHING_LENGTH,9)))*(pow(SMOOTHING_LENGTH,2)-pow(r,2))*(3*pow(SMOOTHING_LENGTH,2) - 7*(pow(r,2)));
+            }
+}
+        modgradient = length(normal);
+        if(modgradient<(0.1/SMOOTHING_LENGTH)){surface_force = vec3(0,0,0);}
+        else{
+        surface_force = 0.1*(normal)*gradient/modgradient;
+        }
+} 
+
+    
+
+    
     viscosity_force *= PARTICLE_VISCOSITY;
 
-    external_force = particles[i].density* GRAVITY;
+    external_force = particles[i].density* GRAVITY ;//+ (particles[i].density-1000)* GRAVITY;
 
-    particles[i].forcex = pressure_force.x + viscosity_force.x + external_force.x;
-    particles[i].forcey = pressure_force.y + viscosity_force.y + external_force.y;
-    particles[i].forcez = pressure_force.z + viscosity_force.z + external_force.z;
+    particles[i].forcex = pressure_force.x + viscosity_force.x + external_force.x + surface_force.x ;
+    particles[i].forcey = pressure_force.y + viscosity_force.y + external_force.y + surface_force.y ;
+    particles[i].forcez = pressure_force.z + viscosity_force.z + external_force.z + surface_force.z;
     particles[i].correction_forcex = (correction_pressure_force.x + correction_viscosity_force.x + external_force.x);
 	particles[i].correction_forcey = (correction_pressure_force.y + correction_viscosity_force.y + external_force.y);
     particles[i].correction_forcez = (correction_pressure_force.z + correction_viscosity_force.z + external_force.z);

@@ -21,6 +21,7 @@ const float idealDT = 1.0f / idealHZ;
 int realhz = idealHZ;
 float realdt = idealDT;
 const int PARTICLENUMBERS = 7200;
+const bool solidtest = false;
 FluidPhysics::FluidPhysics(GameWorld& world) : OGLRenderer(*Window::GetWindow()), gameWorld(world) {
 	PositioncomputeShader = new OGLComputeShader("computeShader.comp"); // position commpute shader
 	ForcecomputeShader = new OGLComputeShader("forcecomputeShader.comp");
@@ -30,8 +31,7 @@ FluidPhysics::FluidPhysics(GameWorld& world) : OGLRenderer(*Window::GetWindow())
 	GLvoid* p;
 	float	dTOffset = 0;
 	glGenBuffers(1, &ssbo);
-	
-	glGenBuffers(1, &ssbo);
+	glGenBuffers(1, &solidsssbo);
 	
 
 	
@@ -48,80 +48,14 @@ FluidPhysics::~FluidPhysics() {
 };
 
 void FluidPhysics::Update(float dt) {
-	GameTimer t;
-	t.GetTimeDeltaSeconds(); 
-	
-	int iteratorCount = 0;
-	//dTOffset += dt; //We accumulate time delta here - there might be remainders from previous frame!
-	//ClearFluids();
-	UpdateParticlePositions();
-	//if (dTOffset / realdt > 120) {
-	  ComputeConstraints();
-
-		ComputeDensity();
-		
-		ComputeForces();
-		ComputeSolids();
-
-	//}
-		
-		float updateTime = t.GetTimeDeltaSeconds();
-		iteratorCount++;
-	/*}*/
-	
-	
+UpdateParticlePositions();
+ComputeConstraints();
+ComputeDensity();
+ComputeForces();
+ComputeSolids();
 } 
 
-void FluidPhysics::NearestNeighbour() {
-	Neighbourhood.clear();
-	QuadTree<FluidGameObject*> tree(Vector2(1024, 1024), 7, 6); // size must be 12, 
 
-	std::vector<FluidGameObject*>::const_iterator first;
-	std::vector<FluidGameObject*>::const_iterator last;
-	gameWorld.GetFluidObjectIterators(first, last);
-	for (auto i = first; i != last; ++i) {
-		Vector3 halfSizes;
-		if (!(*i)->GetNeighbourhoodSize(halfSizes))
-			continue;
-		Vector3 pos = (*i)->GetTransform().GetPosition();
-		tree.Insert(*i, pos, halfSizes);
-	}
-	tree.OperateOnContents([&](std::list<QuadTreeEntry<FluidGameObject*>>& data) {
-		CollisionDetection::FluidCollisionInfo info;
-		for (auto i = data.begin(); i != data.end(); ++i) {
-			for (auto j = std::next(i); j != data.end(); ++j) {
-				// Is this pair of items in th ecollisions set
-				// Is the same pair is in another quadtree node together
-				info.a = std::min((*i).object, (*j).object);
-				info.b = std::max((*i).object, (*j).object);
-				Neighbourhood.insert(info);
-			}
-		}
-		});
-	
-	
-};
-void FluidPhysics::SetNeighbourhoodLists() {
-	
-		 for (std::set < CollisionDetection::FluidCollisionInfo >::iterator
-		 i = Neighbourhood.begin();
-			 i != Neighbourhood.end(); ++i) {
-			 CollisionDetection::FluidCollisionInfo info = *i;
-			 if (CollisionDetection::CreateNeighbourhood(info.a, info.b, info)) {
-				// ImpulseResolveCollision(*info.a, *info.b, info.point);
-				// allCollisions.insert(info); // insert into our main set
-				
-			}
-			
-		
-		
-	}
-}
-//void FluidPhysics::ImpulseResolveCollision(GameObject& a, GameObject& b, CollisionDetection::ContactPoint& p) const {
-//}
-void FluidPhysics::FluidCollision() {
-
-};
 void FluidPhysics::UpdateParticlePositions() {
 	std::vector<GameObject*>::const_iterator firstsolid;
 	std::vector<GameObject*>::const_iterator lastsolid;
@@ -131,6 +65,7 @@ void FluidPhysics::UpdateParticlePositions() {
 	ParticleProperties ParticlePropslocal[7200];
 	ParticleProperties ParticlePropsOut[7200];
 	ParticleProperties ParticlePropsSolids[3];
+	ParticleProperties ParticlePropsSolidsOut[3];
 	int* size = new int;
 	gameWorld.GetFluidObjectIterators(first, last);
 	gameWorld.GetObjectIterators(firstsolid, lastsolid);
@@ -163,50 +98,92 @@ void FluidPhysics::UpdateParticlePositions() {
 		j = 0;
 		for (auto i = firstsolid; i != lastsolid; ++i) {
 			int volumeType;
-			ParticlePropsSolids[j].x = (*i)->GetTransform().GetPosition().x;
-			ParticlePropsSolids[j].y = (*i)->GetTransform().GetPosition().y;
-			ParticlePropsSolids[j].z = (*i)->GetTransform().GetPosition().z;
-			ParticlePropsSolids[j].correction_forcex = 0;
+			if ((*i)->GetPhysicsObject()->GetInverseMass() > 0) {
+				ParticlePropsSolids[j].x = (*i)->GetTransform().GetPosition().x;
+				ParticlePropsSolids[j].y = (*i)->GetTransform().GetPosition().y;
+				ParticlePropsSolids[j].z = (*i)->GetTransform().GetPosition().z;
+				ParticlePropsSolids[j].correction_forcex = 0;
 
-			if ((*i)->GetBoundingVolume()->type == VolumeType::AABB) { volumeType = 1; };
-			if ((*i)->GetBoundingVolume()->type == VolumeType::OBB) { volumeType = 2; };
-			if ((*i)->GetBoundingVolume()->type == VolumeType::Sphere) { volumeType = 4; };
-			if ((*i)->GetBoundingVolume()->type == VolumeType::Mesh) { volumeType = 8; };
-			if ((*i)->GetBoundingVolume()->type == VolumeType::Capsule) { volumeType = 16; };
-			
-			
+				if ((*i)->GetBoundingVolume()->type == VolumeType::AABB) { volumeType = 1; };
+				if ((*i)->GetBoundingVolume()->type == VolumeType::OBB) { volumeType = 2; };
+				if ((*i)->GetBoundingVolume()->type == VolumeType::Sphere) { volumeType = 4; };
+				if ((*i)->GetBoundingVolume()->type == VolumeType::Mesh) { volumeType = 8; };
+				if ((*i)->GetBoundingVolume()->type == VolumeType::Capsule) { volumeType = 16; };
 
-		    ParticlePropsSolids[j].velocityx = (*i)->GetPhysicsObject()->GetLinearVelocity().x;
-			ParticlePropsSolids[j].velocityy = (*i)->GetPhysicsObject()->GetLinearVelocity().y;
-			ParticlePropsSolids[j].velocityz = (*i)->GetPhysicsObject()->GetLinearVelocity().z;
-			ParticlePropsSolids[j].correction_forcey = volumeType;
-			
-			ParticlePropsSolids[j].forcex = (*i)->GetTransform().GetScale().x;
-			ParticlePropsSolids[j].forcey = (*i)->GetTransform().GetScale().y;
-			ParticlePropsSolids[j].forcez = (*i)->GetTransform().GetScale().z;
-			ParticlePropsSolids[j].correction_forcez = 0;
-		
 
-			ParticlePropsSolids[j].density = 0;
-			ParticlePropsSolids[j].dempty = 1/(*i)->GetPhysicsObject()->GetInverseMass();;
-			ParticlePropsSolids[j].pressure = 0;
-			ParticlePropsSolids[j].pempty = 0;
-			j++;
+
+				ParticlePropsSolids[j].velocityx = (*i)->GetPhysicsObject()->GetLinearVelocity().x;
+				ParticlePropsSolids[j].velocityy = (*i)->GetPhysicsObject()->GetLinearVelocity().y;
+				ParticlePropsSolids[j].velocityz = (*i)->GetPhysicsObject()->GetLinearVelocity().z;
+				ParticlePropsSolids[j].correction_forcey = volumeType;
+
+				ParticlePropsSolids[j].forcex = (*i)->GetTransform().GetScale().x;
+				ParticlePropsSolids[j].forcey = (*i)->GetTransform().GetScale().y;
+				ParticlePropsSolids[j].forcez = (*i)->GetTransform().GetScale().z;
+				ParticlePropsSolids[j].correction_forcez = 0;
+
+
+				ParticlePropsSolids[j].density = 0;
+				ParticlePropsSolids[j].dempty = 1 / (*i)->GetPhysicsObject()->GetInverseMass();;
+				ParticlePropsSolids[j].pressure = 0;
+				ParticlePropsSolids[j].pempty = 0;
+				j++;
+			}
+			
 
 		}
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-		//glBufferStorage(GL_SHADER_STORAGE_BUFFER, sizeof(ParticlePropslocal), &ParticlePropslocal[0], GL_CLIENT_STORAGE_BIT | GL_MAP_READ_BIT );
 		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(ParticlePropslocal), &ParticlePropslocal[0], GL_DYNAMIC_COPY);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, solidsssbo);
 		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(ParticlePropsSolids), &ParticlePropsSolids[0], GL_DYNAMIC_COPY);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, solidsssbo);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+		
 		
 		initial = true;
 	}
+	if (solidtest == true) {
+		j = 0;
+		for (auto i = firstsolid; i != lastsolid; ++i) {
+			if ((*i)->GetPhysicsObject()->GetInverseMass() > 0) {
+				int volumeType;
+				ParticlePropsSolids[j].x = (*i)->GetTransform().GetPosition().x;
+				ParticlePropsSolids[j].y = (*i)->GetTransform().GetPosition().y;
+				ParticlePropsSolids[j].z = (*i)->GetTransform().GetPosition().z;
+				ParticlePropsSolids[j].correction_forcex = 0;
 
+				if ((*i)->GetBoundingVolume()->type == VolumeType::AABB) { volumeType = 1; };
+				if ((*i)->GetBoundingVolume()->type == VolumeType::OBB) { volumeType = 2; };
+				if ((*i)->GetBoundingVolume()->type == VolumeType::Sphere) { volumeType = 4; };
+				if ((*i)->GetBoundingVolume()->type == VolumeType::Mesh) { volumeType = 8; };
+				if ((*i)->GetBoundingVolume()->type == VolumeType::Capsule) { volumeType = 16; };
+
+
+
+				ParticlePropsSolids[j].velocityx = (*i)->GetPhysicsObject()->GetLinearVelocity().x;
+				ParticlePropsSolids[j].velocityy = (*i)->GetPhysicsObject()->GetLinearVelocity().y;
+				ParticlePropsSolids[j].velocityz = (*i)->GetPhysicsObject()->GetLinearVelocity().z;
+				ParticlePropsSolids[j].correction_forcey = volumeType;
+
+				ParticlePropsSolids[j].forcex = (*i)->GetTransform().GetScale().x;
+				ParticlePropsSolids[j].forcey = (*i)->GetTransform().GetScale().y;
+				ParticlePropsSolids[j].forcez = (*i)->GetTransform().GetScale().z;
+				ParticlePropsSolids[j].correction_forcez = 0;
+
+
+				ParticlePropsSolids[j].density = 0;
+				ParticlePropsSolids[j].dempty = 1 / (*i)->GetPhysicsObject()->GetInverseMass();
+				ParticlePropsSolids[j].pressure = 0;
+				ParticlePropsSolids[j].pempty = 0;
+				j++;
+			}
+		}
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, solidsssbo);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(ParticlePropsSolids), &ParticlePropsSolids[0], GL_DYNAMIC_COPY);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, solidsssbo);
+	}
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
 	PositioncomputeShader->Bind();
 	PositioncomputeShader->Execute(7200 /32, 1, 1);
 	PositioncomputeShader->Unbind();
@@ -248,16 +225,38 @@ void FluidPhysics::UpdateParticlePositions() {
 		ParticlePropsOut[itt].correction_forcez = ptr[i + 15];
 		itt++;
 	}
-
-	j = 0;
+	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+	
+ 	j = 0;
 		for (auto i = first; i != last; ++i) {
 		(*i)->SetParticlePositions(*i, ParticlePropsOut[j]);
 		j++;
 	}
-	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-
+		
+	if (solidtest == true) {
+			itt = 0;
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, solidsssbo);
+			GLfloat* solidptr;
+			solidptr = (GLfloat*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+			
+			for (int i = 0; i < 16 * 3; i = i + 16) { //return solid from 
+				
+				ParticlePropsSolidsOut[itt].x = solidptr[i];
+				ParticlePropsSolidsOut[itt].y = solidptr[i + 1];
+				ParticlePropsSolidsOut[itt].z = solidptr[i + 2];
+				itt++;
+			}
+			j = 0;
+			for (auto i = firstsolid; i != lastsolid; ++i) {
+				if ((*i)->GetPhysicsObject()->GetInverseMass() > 0) {
+					Transform& transform = (*i)->GetTransform();
+					transform.SetPosition(Vector3(ParticlePropsSolidsOut[j].x, ParticlePropsSolidsOut[j].y, ParticlePropsSolidsOut[j].z));
+					j++;
+				}
+			}
+			glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+	}
 };
-
 void FluidPhysics::ComputeForces() {
 	ForcecomputeShader->Bind();
 	ForcecomputeShader->Execute(PARTICLENUMBERS /32, 1, 1);
@@ -288,7 +287,7 @@ void FluidPhysics::ComputeSolids() {
 void FluidPhysics::ClearFluids() {
 	
 }
-//GL_SHADER_STORAGE_BARRIER_BIT
+
 
 
 

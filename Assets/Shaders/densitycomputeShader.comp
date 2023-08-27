@@ -76,8 +76,8 @@ void main()
         }
     }
 
-if(density_sum==0){density_sum=1001; };
+if(density_sum==0){density_sum=1000; };
     particles[i].density = density_sum;
     // compute pressure
-    particles[i].pressure = max(PARTICLE_STIFFNESS * (density_sum - PARTICLE_DENSITY_START), 0.f);
+    particles[i].pressure = PARTICLE_STIFFNESS * (density_sum - PARTICLE_DENSITY_START);
 }

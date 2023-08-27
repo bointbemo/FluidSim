@@ -8,7 +8,7 @@
 #define PI 3.141592741f
 
 
-#define TIME_STEP 0.01f
+#define TIME_STEP 0.00416666667f
 #define WALL_DAMPING 0.3f
 layout (local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
 
@@ -51,17 +51,20 @@ const float GAS_CONST = 2.0f; // const for equation of state
 
 void main()
 {
-    uint i = gl_GlobalInvocationID.x;
+uint i = gl_GlobalInvocationID.x;
 int boundary = 10;
 vec4 posshift = vec4(0,0,0,0);
+vec4 new_velocity = vec4(0,0,0,0);
+vec4 new_position= vec4(0,0,0,0);
     // integrate
-    if(particles[i].density < 0.01){particles[i].density = 100;};
+    
    
   
+ 
 
     vec4 acceleration = vec4(particles[i].forcex,particles[i].forcey,particles[i].forcez,0) / particles[i].density ;
 
-    vec4 new_velocity = ((vec4(particles[i].velocityx,particles[i].velocityy,particles[i].velocityz,0)+ (TIME_STEP+TIME_STEP/2) * acceleration) + 
+    new_velocity = ((vec4(particles[i].velocityx,particles[i].velocityy,particles[i].velocityz,0)+ (TIME_STEP+TIME_STEP/2) * acceleration) + 
     (vec4(particles[i].velocityx,particles[i].velocityy,particles[i].velocityz,0)+ (TIME_STEP-TIME_STEP/2 * acceleration)))/2;
 
      if(new_velocity.x>2000 ){new_velocity.x = 2000;};
@@ -76,23 +79,27 @@ vec4 posshift = vec4(0,0,0,0);
     if(new_velocity.z<-2000){new_velocity.z = -2000;};
   if(isinf(new_velocity.z) == true){new_velocity.z = particles[i].velocityz;};
   
-    vec4 new_position = vec4(particles[i].x,particles[i].y,particles[i].z,0) + TIME_STEP * new_velocity;
+    new_position = vec4(particles[i].x,particles[i].y,particles[i].z,0) + TIME_STEP * new_velocity;
 
    
 
    if(particles[i].dempty == 1){
     vec4 correction_acceleration = vec4(particles[i].correction_forcex,particles[i].correction_forcey,particles[i].correction_forcez,0) / 1000;
-    vec4 correction_velocity = vec4(particles[i].velocityx,particles[i].velocityy,particles[i].velocityz,0)+ TIME_STEP * acceleration;
-    vec4 correction_position = vec4(particles[i].x,particles[i].y,particles[i].z,0) + TIME_STEP * new_velocity;
+    vec4 correction_velocity = vec4(particles[i].velocityx,particles[i].velocityy,particles[i].velocityz,0)+ TIME_STEP * correction_acceleration;
+    vec4 correction_position = vec4(particles[i].x,particles[i].y,particles[i].z,0) + TIME_STEP * correction_velocity;
     new_position = correction_position + new_position;
-    particles[i].dempty = 1;
    }
+  if(particles[i].density==1000){new_velocity = vec4(particles[i].velocityx,particles[i].velocityy,particles[i].velocityz,0)*0.01;
+  new_position = vec4(particles[i].x,particles[i].y,particles[i].z,0) +  TIME_STEP * new_velocity;
+  }
+  
+    
 
 
 
-    {
+    
     // boundary conditions
-   /*   if (new_position.x < -8) //-boundary)
+       if (new_position.x < -8) //-boundary)
     {
         new_position.x = -8; //-boundary;
         new_velocity.x *= -1 *WALL_DAMPING;
@@ -105,7 +112,7 @@ vec4 posshift = vec4(0,0,0,0);
      if (new_position.y < -8) //-boundary)
     {
         new_position.y = -8 ;//-boundary;
-        new_velocity.y *= -1* 0.01;
+        new_velocity.y *= -1*WALL_DAMPING;
     }
     else if (new_position.y >-3) //boundary)
     {
@@ -121,7 +128,7 @@ vec4 posshift = vec4(0,0,0,0);
     {
         new_position.z = -3 ;//boundary;
         new_velocity.z *= -1 * WALL_DAMPING;
-    }  */
+    }    /*
       if (new_position.x < -boundary)
     {
         new_position.x = -boundary;
@@ -152,7 +159,7 @@ vec4 posshift = vec4(0,0,0,0);
     {
         new_position.z = boundary;
         new_velocity.z *= -1 * WALL_DAMPING;
-    } 
+    }    */
 
 
 
@@ -162,5 +169,6 @@ vec4 posshift = vec4(0,0,0,0);
     particles[i].x = new_position.x;
     particles[i].y = new_position.y;
     particles[i].z=  new_position.z;
-}
+   
+
 }

@@ -275,7 +275,7 @@ void TutorialGame::InitWorld() {
     AddSphereToWorld(Vector3(-3, 1, -3), 1, 10);
 	AddSphereToWorld(Vector3(2, 2, 2), 1, 10);
 	AddSphereToWorld(Vector3(2, 2, 2), 1, 10);
-
+	AddFloorToWorld(Vector3(0, -15, 0));
 	//AddCubeToWorld(Vector3(1, 1, 1), Vector3(1, 1, 1));
 	//AddCubeToWorld(Vector3(1, 1, 1), Vector3(1, 1, 1));
 	//AddCubeToWorld(Vector3(1000, 1, 1), Vector3(1, 1, 1));

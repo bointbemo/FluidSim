@@ -7,7 +7,7 @@
 // For calculations
 #define PI 3.141592741f
 #define SMOOTHING_LENGTH (0.158460189)
-#define relaxation_factor 10f
+#define relaxation_factor 1.0f
 #define TIME_STEP 0.001f
 #define WALL_DAMPING 0.3f
 layout (local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
@@ -91,10 +91,12 @@ void main()
         if(r>SMOOTHING_LENGTH){
            correctiongradient = -((15/(PI*pow(SMOOTHING_LENGTH,6)) *pow(SMOOTHING_LENGTH-rkernal, 3))) ;
         }
+        
         }
         if(particles[i].density==0){particles[i].density = 1;};
-        correctiongradienttotal += pow(correctiongradient,2);
-        llambda = ((particles[i].density/1000)-1)/(correctiongradienttotal+relaxation_factor);
+        correctiongradienttotal = pow(correctiongradient,2);
+
+        llambda =- ((particles[i].density/1000)-1)/(correctiongradienttotal+relaxation_factor);
         particles[i].pempty = llambda;
 }
 
