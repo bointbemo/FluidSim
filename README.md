@@ -2,7 +2,7 @@
 
 Smooth Particle Hydrodynamics (SPH)is an interpolation method which approximates and derives of continuous field quantities by using discrete sample points. The points are the said smooth particles that carry mass, position and velocity and also pressure, temperature and density. SPH can approximate derivates of continuous fields using analytical differentiation on particles located arbitrarily. i.e. does not have to be confined to a particular location in space. Using my physics background I implemented a SPH physics system into the Newcastle University game engine, solving all fluid particle calculations in compute shaders and providing the ability for fluid bodies to act on rigid bodies. the simulation currently supports up to 7200 particles being rendered with forces being updated on the GPU achieving 240 frame per second in most scenarios.
 
-#How to run
+<h1>How to run</h1>
 The solution is in the Build folder, If there isnt one, create a empty folder titled build.
 
 Set the CSC8503 project as the startup project, and set the configuration type to x64. 
